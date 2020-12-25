@@ -1,0 +1,66 @@
+.the-range-slider {
+  -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+  /* width: 100%; Specific width is required for Firefox. */
+  background: transparent; /*Otherwise white in Chrome*/
+  margin-left: 4px;
+  position: relative;
+  transform: translateZ(30%);
+}
+
+.the-range-slider-drag-complete {
+  margin-left: 2px;
+}
+
+.the-range-slider::-webkit-slider-thumb {
+  position: absolute;
+  -webkit-appearance: none;
+  height: 31px;
+  width: 31px;
+  border-radius: 31px;
+  background: #fb4708;
+  cursor: pointer;
+  margin-top: -5px;
+  transform: translate(-50%, 0%);
+}
+
+.the-range-slider::-webkit-slider-runnable-track {
+  /* width: 100vw; */
+  cursor: pointer;
+  /* background: #141148; */
+  /* background: linear-gradient(
+    90deg,
+    rgba(43, 30, 71, 1) 43%,
+    rgba(142, 115, 200, 1) 43%
+  ); */
+  height: 20px;
+  box-sizing: border-box;
+  -webkit-border-radius: 20px;
+  border-radius: 20px;
+}
+
+.the-range-slider:focus {
+  outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
+}
+
+.the-range-slider::-ms-track {
+  /* width: 100%; */
+  cursor: pointer;
+
+  /* Hides the slider so custom styles can be added */
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+
+.range-slider-initial-display {
+  display: none;
+}
+
+.range-slider-hide-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 0px;
+  width: 0px;
+  border-radius: 0px;
+  background: #fb4708;
+  cursor: pointer;
+}

@@ -1,0 +1,61 @@
+{
+  "name": "scheduling-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.32",
+    "@fortawesome/free-solid-svg-icons": "^5.15.1",
+    "@fortawesome/react-fontawesome": "^0.1.12",
+    "@material-ui/core": "^4.11.0",
+    "@material-ui/icons": "^4.9.1",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "bootstrap": "^4.5.3",
+    "deck.gl": "6.1.0",
+    "immutable": "^4.0.0-rc.12",
+    "lodash": "^4.17.20",
+    "luxon": "^1.25.0",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.31",
+    "node-fetch": "^2.6.1",
+    "rc-slider": "^9.7.1",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-draggable": "^4.4.3",
+    "react-map-gl": "^5.2.9",
+    "react-scripts": "3.4.3",
+    "react-select": "^3.1.0",
+    "react-sizeme": "^2.6.12",
+    "recompose": "^0.30.0",
+    "styled-components": "^5.2.0",
+    "topojson-client": "^3.1.0",
+    "uuid": "^8.3.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "eslint": "^6.6.0",
+    "eslint-plugin-react": "^7.21.5",
+    "eslint-plugin-react-hooks": "^4.2.0"
+  }
+}
