@@ -409,7 +409,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
       setDragging(false);
     });
     window.addEventListener("wheel", (e) => {
-      console.log("window wheel ctrl", e.ctrlKey);
+      console.log("window wheel ctrl", e.ctrlKey, e.metaKey);
     });
   });
 
@@ -442,7 +442,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, [scrollLeftSpeed]);
 
   const onZoom = (e) => {
-    console.log("zoomed! e.ctrlkey: " + e.ctrlKey);
+    console.log("zoomed! e.ctrlkey: " + e.ctrlKey, "e.metaKey: " + e.metaKey);
     if (e.ctrlKey) {
       e.preventDefault();
       if (!zooming.current) {
