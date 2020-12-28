@@ -6,6 +6,7 @@ import "./style.css";
 import moment from "moment";
 import settings from "./settings";
 import FormButton from "components/FormButton";
+import { range } from "lodash";
 
 function isBetween(x, min, max, strict = false) {
   return !strict ? x >= min && x <= max : x > min && x < max;
@@ -66,7 +67,7 @@ const DayTimeline = ({
 
   const parseMouseEvent = (e) => {
     var bounds = e.currentTarget.getBoundingClientRect();
-    var x = +(((e.clientX - bounds.left) / size.width) * maxValue);
+    var x = Math.round(+(((e.clientX - bounds.left) / size.width) * maxValue));
     var mouseY = e.clientY - bounds.top;
     let rangeIndex = -1;
     let it = 0;
@@ -95,26 +96,49 @@ const DayTimeline = ({
   };
 
   const addNewRange = (values) => {
-    let rangeIndex = -1;
     if (values[0] !== values[1]) {
-      //inserting range at correct position. Ranges are ordered in ascending order.
+      let finalValue = values;
+      let whereToInsert = -1;
+
       setRanges((prev) => {
         let arr = [...prev];
-        let it = 0;
-        while (rangeIndex === -1 && it < arr.length) {
-          if (arr[it].range[0] >= values[1]) {
-            rangeIndex = it;
-            arr.splice(it, 0, { range: values, from: maxValue });
+        if (arr.length) {
+          let finished = false,
+            i = arr.length - 1;
+          while (!finished && i >= 0) {
+            if (
+              isBetween(arr[i].range[0], values[0], values[1]) ||
+              isBetween(arr[i].range[1], values[0], values[1]) ||
+              isBetween(values[0], arr[i].range[0], arr[i].range[1]) ||
+              isBetween(values[1], arr[i].range[0], arr[i].range[1])
+            ) {
+              whereToInsert = i;
+              finalValue[0] = Math.min(finalValue[0], arr[i].range[0]);
+              finalValue[1] = Math.max(finalValue[1], arr[i].range[1]);
+              arr.splice(i, 1);
+            } else if (values[0] > arr[i].range[1]) {
+              finished = true;
+              whereToInsert = i + 1;
+            }
+            i--;
           }
-          it++;
+          whereToInsert = whereToInsert === -1 ? 0 : whereToInsert;
+          arr.splice(whereToInsert, 0, {
+            range: finalValue,
+            from: maxValue,
+          });
+        } else {
+          arr = [
+            {
+              range: finalValue,
+              from: maxValue,
+            },
+          ];
         }
 
-        if (rangeIndex === -1) {
-          rangeIndex = it;
-          arr = arr.concat([{ range: values, from: maxValue }]);
-        }
         return arr;
       });
+      setSelectedItems([]);
     }
   };
 
@@ -135,8 +159,8 @@ const DayTimeline = ({
       onMouseMove={(e) => {
         let { rangeIndex, x } = parseMouseEvent(e);
         setActive(rangeIndex);
-        if (!dragging && !isBetween(x, newRange[0], newRange[1])) {
-          setNewRange([x, x]);
+        if (!dragging) {
+          rangeIndex === -1 ? setNewRange([x, x]) : setNewRange([]);
         }
       }}
       onMouseEnter={() => {
@@ -232,31 +256,9 @@ const DayTimeline = ({
             <Range
               value={x.range.map((b) => (b / x.from) * maxValue)}
               onChange={(val) => {
-                let finalValue = val;
-                //forcing input not to have value within neighbours ranges
-                if (i > 0) {
-                  let leftNeighbour = (ranges[i - 1].range[1] / ranges[i - 1].from) * maxValue;
-                  if (val[0] < leftNeighbour) {
-                    //if new range is equal to old range - track dragging,
-                    if (x.range[1] - x.range[0] === val[1] - val[0]) {
-                      finalValue[1] = finalValue[1] + (leftNeighbour - finalValue[0]);
-                    }
-                    finalValue[0] = leftNeighbour;
-                  }
-                }
-
-                if (i < ranges.length - 1) {
-                  let rightNeighbour = (ranges[i + 1].range[0] / ranges[i + 1].from) * maxValue;
-                  if (val[1] > rightNeighbour) {
-                    if (x.range[1] - x.range[0] === val[1] - val[0]) {
-                      finalValue[0] = finalValue[0] - (finalValue[1] - rightNeighbour);
-                    }
-                    finalValue[1] = rightNeighbour;
-                  }
-                }
                 setRanges((prev) => {
                   let arr = [...prev];
-                  arr[i].range = finalValue;
+                  arr[i].range = val;
                   arr[i].from = maxValue;
                   return arr;
                 });
@@ -266,6 +268,34 @@ const DayTimeline = ({
                   setRanges((prev) => {
                     let arr = [...prev];
                     arr.splice(i, 1);
+                    return arr;
+                  });
+                } else {
+                  let finalValue = val;
+
+                  setRanges((prev) => {
+                    let arr = [...prev];
+                    let whereToInsert = 0;
+                    for (let ind = arr.length - 1; ind >= 0; ind--) {
+                      if (
+                        isBetween(arr[ind].range[0], val[0], val[1]) ||
+                        isBetween(arr[ind].range[1], val[0], val[1]) ||
+                        isBetween(val[0], arr[ind].range[0], arr[ind].range[1]) ||
+                        isBetween(val[1], arr[ind].range[0], arr[ind].range[1])
+                      ) {
+                        whereToInsert = ind;
+                        finalValue[0] = Math.min(finalValue[0], arr[ind].range[0]);
+                        finalValue[1] = Math.max(finalValue[1], arr[ind].range[1]);
+                        arr.splice(ind, 1);
+                        if (ind !== i) {
+                          setSelectedItems([]);
+                        }
+                      }
+                    }
+                    arr.splice(whereToInsert, 0, {
+                      range: finalValue,
+                      from: maxValue,
+                    });
                     return arr;
                   });
                 }
@@ -294,28 +324,20 @@ const DayTimeline = ({
         );
       })}
       <div
+        onMouseDown={() => setSelectedItems([])}
         className="position-absolute w-100"
-        style={{ top: 0, left: 0, zIndex: active === -1 ? 15 : 0, paddingTop: "7px" }}
+        style={{
+          top: 0,
+          left: 0,
+          zIndex: active === -1 ? 15 : 0,
+          paddingTop: "7px",
+          paddingBottom: "9px",
+        }}
       >
         <Range
           value={newRange}
           onChange={(val) => {
-            let found = false,
-              it = 0,
-              finalValue = val;
-            //forcing input not to have value within neighbours ranges
-            while (!found && it < ranges.length) {
-              let left = (ranges[it].range[0] / ranges[it].from) * maxValue;
-              let right = (ranges[it].range[1] / ranges[it].from) * maxValue;
-              if (val[0] <= left && left < val[1]) {
-                finalValue[1] = ranges[it].range[0];
-                found = true;
-              } else if (val[0] < right && right <= val[1]) {
-                finalValue[0] = ranges[it].range[1];
-                found = true;
-              }
-              it++;
-            }
+            let finalValue = val;
             if (val[1] !== undefined) {
               setNewRange(newRange.length ? finalValue : [val[1], val[1]]);
             }
@@ -509,20 +531,11 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
           className="d-flex justify-content-end mb-3"
           style={{ opacity: !selectedItems.length ? 0 : 1 }}
         >
-          {/* {selectedItems.length >= 2 && (
-            <FormButton
-              onClick={onGroup}
-              style={{ marginRight: "20px", fontSize: "14px", padding: "4px 40px" }}
-            >
-              Group
-            </FormButton>
-          )} */}
-
           <FormButton style={{ fontSize: "14px", padding: "4px 40px" }} onClick={onDelete}>
             Delete
           </FormButton>
         </div>
-        <div className="d-flex" style={{ maxWidth: "1000px" }}>
+        <div className="d-flex">
           <div className="pr-3">
             <div
               style={{ height: "68px", textAlign: "center", fontWeight: "700", color: "#2d2d61" }}
