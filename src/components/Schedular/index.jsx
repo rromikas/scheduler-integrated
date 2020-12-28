@@ -85,7 +85,9 @@ const DayTimeline = ({
     while (fits && it < ranges.length) {
       if (
         isBetween(values[0], ranges[it].range[0], ranges[it].range[1], true) ||
-        isBetween(values[1], ranges[it].range[0], ranges[it].range[1], true)
+        isBetween(values[1], ranges[it].range[0], ranges[it].range[1], true) ||
+        isBetween(ranges[it].range[0], values[0], values[1], true) ||
+        isBetween(ranges[it].range[1], values[0], values[1], true)
       ) {
         fits = false;
       }
@@ -97,7 +99,7 @@ const DayTimeline = ({
   const addNewRange = (values) => {
     if (values[0] !== values[1]) {
       let finalValue = values;
-      let whereToInsert = -1;
+      let whereToInsert = 0;
 
       setRanges((prev) => {
         let arr = [...prev];
@@ -121,7 +123,6 @@ const DayTimeline = ({
             }
             i--;
           }
-          whereToInsert = whereToInsert === -1 ? 0 : whereToInsert;
           arr.splice(whereToInsert, 0, {
             range: finalValue,
             from: maxValue,
@@ -149,11 +150,8 @@ const DayTimeline = ({
       style={{ height: "30px", marginBottom: "20px" }}
       className="w-100 position-relative"
       onMouseUp={() => {
-        if (doesRangeCandidateFit(rangeCandidate)) {
-          addNewRange(rangeCandidate);
-          setRangeCandidate([]);
-          setRangeFit(true);
-        }
+        addNewRange(rangeCandidate);
+        setRangeCandidate([]);
       }}
       onMouseMove={(e) => {
         let { rangeIndex, x } = parseMouseEvent(e);
@@ -165,16 +163,13 @@ const DayTimeline = ({
       onMouseEnter={() => {
         if (dragging && selectedItems.length === 1 && +selectedItems[0].split("-")[0] !== day) {
           let parts = selectedItems[0].split("-").map((x) => parseInt(x));
-          setRangeCandidate(allRanges[parts[0]][parts[1]].range);
-          if (doesRangeCandidateFit(allRanges[parts[0]][parts[1]].range)) {
-            setRangeFit(true);
-          }
+          let rc = JSON.parse(JSON.stringify(allRanges[parts[0]][parts[1]].range));
+          setRangeCandidate(rc);
         }
       }}
       onMouseLeave={() => {
         setActive(-2);
         setRangeCandidate([]);
-        setRangeFit(false);
       }}
     >
       <div
@@ -189,7 +184,7 @@ const DayTimeline = ({
           trackStyle={[
             {
               borderRadius: "30px",
-              backgroundColor: rangeFit ? "rgba(45,45,97,0.7)" : "rgba(255,0,0,0.49)",
+              backgroundColor: "rgba(45,45,97,0.7)",
               height: "30px",
               top: "-7px",
               cursor: "grab",
@@ -255,6 +250,7 @@ const DayTimeline = ({
             <Range
               value={x.range.map((b) => (b / x.from) * maxValue)}
               onChange={(val) => {
+                console.log("day value", day, val);
                 setRanges((prev) => {
                   let arr = [...prev];
                   arr[i].range = val;
@@ -291,6 +287,7 @@ const DayTimeline = ({
                         }
                       }
                     }
+                    console.log("WTI, FV", whereToInsert, finalValue, day);
                     arr.splice(whereToInsert, 0, {
                       range: finalValue,
                       from: maxValue,
@@ -408,9 +405,6 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
     window.addEventListener("mouseup", () => {
       setDragging(false);
     });
-    window.addEventListener("wheel", (e) => {
-      console.log("window wheel ctrl", e.ctrlKey, e.metaKey);
-    });
   });
 
   useEffect(() => {
@@ -442,8 +436,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, [scrollLeftSpeed]);
 
   const onZoom = (e) => {
-    console.log("zoomed! e.ctrlkey: " + e.ctrlKey, "e.metaKey: " + e.metaKey);
-    if (e.ctrlKey) {
+    if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       if (!zooming.current) {
         zooming.current = true;
