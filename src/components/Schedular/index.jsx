@@ -525,7 +525,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, [zoomableContainerReady, onZoom, size]);
 
   return (
-    <div className="w-100 d-flex flex-center" style={{ fontSize: "14px" }}>
+    <div className="w-100 d-flex flex-center" style={{ fontSize: "14px", userSelect: "none" }}>
       <div className="p-4 w-100" style={{ background: "rgb(255, 249, 241)", overflowX: "auto" }}>
         <div
           className="d-flex justify-content-end mb-3"
@@ -675,7 +675,6 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                     }
                   }}
                   style={{
-                    userSelect: "none",
                     position: "absolute",
                     width: size,
                     top: 0,
