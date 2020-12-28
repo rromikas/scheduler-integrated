@@ -2,11 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { Range } from "rc-slider";
 import "rc-slider/assets/index.css";
 import "bootstrap/dist/css/bootstrap.css";
-import "./style.css";
+import "./styles/style.css";
 import moment from "moment";
 import settings from "./settings";
 import FormButton from "components/FormButton";
-import { range } from "lodash";
 
 function isBetween(x, min, max, strict = false) {
   return !strict ? x >= min && x <= max : x > min && x < max;
@@ -440,6 +439,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, [scrollLeftSpeed]);
 
   const onZoom = (e) => {
+    console.log("zoomed! e.ctrlkey: " + e.ctrlKey);
     if (e.ctrlKey) {
       e.preventDefault();
       if (!zooming.current) {
@@ -525,7 +525,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, [zoomableContainerReady, onZoom, size]);
 
   return (
-    <div className="w-100 d-flex flex-center" style={{ fontSize: "14px", userSelect: "none" }}>
+    <div className="w-100 d-flex flex-center user-select-none" style={{ fontSize: "14px" }}>
       <div className="p-4 w-100" style={{ background: "rgb(255, 249, 241)", overflowX: "auto" }}>
         <div
           className="d-flex justify-content-end mb-3"

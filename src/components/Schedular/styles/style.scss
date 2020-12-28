@@ -1,0 +1,31 @@
+td {
+  border: 1px solid #f9dea5;
+  text-align: left;
+}
+
+table {
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.flex-center {
+  align-items: center;
+  justify-content: center;
+}
+
+.steps::after {
+  height: 10px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  content: "";
+  border-right: 2px solid #2d2d61;
+}
+
+.steps {
+  position: relative;
+}
+
+.user-select-none {
+  user-select: none;
+}
