@@ -228,13 +228,13 @@ const DayTimeline = ({
               setSelectedItems((prev) => {
                 let arr = [...prev];
                 if (index !== -1) {
-                  if (e.ctrlKey) {
+                  if (e.shiftKey) {
                     arr.splice(index, 1);
                   } else {
                     arr = [newSelected];
                   }
                 } else {
-                  if (e.ctrlKey) {
+                  if (e.shiftKey) {
                     if (whereToInsert !== -1) {
                       arr.splice(whereToInsert, 0, newSelected);
                     } else {
