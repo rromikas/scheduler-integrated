@@ -436,7 +436,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, [scrollLeftSpeed]);
 
   const onZoom = (e) => {
-    console.log("on zoom", e.ctrlKey, e.metaKey);
+    console.log("on zoom", e.ctrlKey, e.metaKey, e.keyCode);
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       if (!zooming.current) {
