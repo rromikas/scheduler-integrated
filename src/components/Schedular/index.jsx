@@ -675,6 +675,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                     }
                   }}
                   style={{
+                    userSelect: "none",
                     position: "absolute",
                     width: size,
                     top: 0,
