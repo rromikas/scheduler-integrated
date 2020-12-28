@@ -408,6 +408,9 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
     window.addEventListener("mouseup", () => {
       setDragging(false);
     });
+    window.addEventListener("wheel", (e) => {
+      console.log("window wheel ctrl", e.ctrlKey);
+    });
   });
 
   useEffect(() => {
