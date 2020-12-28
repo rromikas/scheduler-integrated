@@ -1,5 +1,11 @@
+@font-face {
+  src: url("./fonts/Poppins-Regular.ttf") format("truetype");
+  font-family: "Poppins";
+}
+
 body {
-  background-color: #efefef;
+  font-family: "Poppins" !important;
+  background-color: #efefef !important;
 }
 
 .App {
@@ -39,4 +45,8 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+button:focus {
+  outline: 0 !important;
 }

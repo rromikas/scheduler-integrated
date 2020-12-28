@@ -4,10 +4,11 @@ import "rc-slider/assets/index.css";
 import "bootstrap/dist/css/bootstrap.css";
 import "./style.css";
 import moment from "moment";
-import { makeStyles } from "@material-ui/core/styles";
+import settings from "./settings";
+import FormButton from "components/FormButton";
 
-function isBetween(x, min, max) {
-  return x >= min && x <= max;
+function isBetween(x, min, max, strict = false) {
+  return !strict ? x >= min && x <= max : x > min && x < max;
 }
 function convertMinsToHrsMins(minutes) {
   var h = Math.floor(minutes / 60);
@@ -25,28 +26,40 @@ const DayTimeline = ({
   dragging,
   setDragging,
   interval,
-  selectedItem,
-  setSelectedItem,
+  selectedItems,
+  setSelectedItems,
   ranges,
   setRanges,
+  showLines,
+  allRanges,
 }) => {
   // const [ranges, setRanges] = useState([]);
   const [active, setActive] = useState(-2);
   const [newRange, setNewRange] = useState([]);
+  const [rangeCandidate, setRangeCandidate] = useState([]);
+  const [rangeFit, setRangeFit] = useState(false);
   const maxValue = totalMinutes / step;
 
   const styleOfInputHandler = (activeState, value) => {
     return {
       height: "30px",
-      top: "-3px",
+      top: "-2px",
       width: "30px",
       borderRadius: "50%",
-      backgroundColor:
-        activeState === -2 || (value.toFixed(0) * step) % interval !== 0
-          ? "transparent"
-          : "#fb4708",
-      border: "none",
+      backgroundPosition: "center",
+      zIndex: 2,
+      backgroundColor: "#FB4708",
+      opacity: !dragging
+        ? showLines
+          ? activeState === -2
+            ? 0
+            : 1
+          : activeState === -2 || (value.toFixed(0) * step) % interval !== 0
+          ? 0
+          : 1
+        : 0,
       outline: 0,
+      border: "none",
       boxShadow: "none",
     };
   };
@@ -66,14 +79,57 @@ const DayTimeline = ({
     return { rangeIndex, x, mouseY };
   };
 
+  const doesRangeCandidateFit = (values) => {
+    let fits = true,
+      it = 0;
+    while (fits && it < ranges.length) {
+      if (
+        isBetween(values[0], ranges[it].range[0], ranges[it].range[1], true) ||
+        isBetween(values[1], ranges[it].range[0], ranges[it].range[1], true)
+      ) {
+        fits = false;
+      }
+      it++;
+    }
+    return fits;
+  };
+
+  const addNewRange = (values) => {
+    let rangeIndex = -1;
+    if (values[0] !== values[1]) {
+      //inserting range at correct position. Ranges are ordered in ascending order.
+      setRanges((prev) => {
+        let arr = [...prev];
+        let it = 0;
+        while (rangeIndex === -1 && it < arr.length) {
+          if (arr[it].range[0] >= values[1]) {
+            rangeIndex = it;
+            arr.splice(it, 0, { range: values, from: maxValue });
+          }
+          it++;
+        }
+
+        if (rangeIndex === -1) {
+          rangeIndex = it;
+          arr = arr.concat([{ range: values, from: maxValue }]);
+        }
+        return arr;
+      });
+    }
+  };
+
   return (
     <div
-      style={{ height: "50px" }}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+      style={{ height: "30px", marginBottom: "20px" }}
       className="w-100 position-relative"
-      onMouseDown={(e) => {
-        let { rangeIndex, mouseY } = parseMouseEvent(e);
-        if (rangeIndex === -1 || mouseY > 23 || mouseY < -7) {
-          setSelectedItem((prev) => Object.assign({}, prev, { day: -1, rangeIndex: -1 }));
+      onMouseUp={() => {
+        if (doesRangeCandidateFit(rangeCandidate)) {
+          addNewRange(rangeCandidate);
+          setRangeCandidate([]);
+          setRangeFit(true);
         }
       }}
       onMouseMove={(e) => {
@@ -83,30 +139,95 @@ const DayTimeline = ({
           setNewRange([x, x]);
         }
       }}
+      onMouseEnter={() => {
+        if (dragging && selectedItems.length === 1 && +selectedItems[0].split("-")[0] !== day) {
+          let parts = selectedItems[0].split("-").map((x) => parseInt(x));
+          setRangeCandidate(allRanges[parts[0]][parts[1]].range);
+          if (doesRangeCandidateFit(allRanges[parts[0]][parts[1]].range)) {
+            setRangeFit(true);
+          }
+        }
+      }}
       onMouseLeave={() => {
         setActive(-2);
+        setRangeCandidate([]);
+        setRangeFit(false);
       }}
     >
+      <div
+        className="position-absolute w-100"
+        style={{ top: 0, left: 0, zIndex: 0, paddingTop: "7px" }}
+      >
+        <Range
+          value={rangeCandidate}
+          step={1}
+          max={maxValue}
+          min={0}
+          trackStyle={[
+            {
+              borderRadius: "30px",
+              backgroundColor: rangeFit ? "rgba(45,45,97,0.7)" : "rgba(255,0,0,0.49)",
+              height: "30px",
+              top: "-7px",
+              cursor: "grab",
+            },
+          ]}
+          handleStyle={[{ opacity: 0 }, { opacity: 0 }]}
+          railStyle={{ opacity: 0 }}
+        ></Range>
+      </div>
       {ranges.map((x, i) => {
         return (
           <div
             onMouseDown={(e) => {
+              e.persist();
               e.stopPropagation();
               setDragging(true);
-              var bounds = e.currentTarget.getBoundingClientRect();
-              var x = e.clientX - bounds.left;
-              setSelectedItem((prev) =>
-                Object.assign({}, prev, {
-                  day: day,
-                  rangeIndex: i,
-                  mouseX: x,
-                })
-              );
+              let newSelected = day + "-" + i;
+              let index = -1;
+              let whereToInsert = -1;
+              for (let it = 0; it < selectedItems.length; it++) {
+                if (selectedItems[it] === newSelected) {
+                  index = it;
+                }
+                let parts = selectedItems[it].split("-").map((x) => parseInt(x));
+                if (whereToInsert === -1) {
+                  if (parts[0] > day) {
+                    whereToInsert = it;
+                  } else if (parts[0] === day) {
+                    if (parts[1] > i) {
+                      whereToInsert = it;
+                    }
+                  }
+                }
+              }
+
+              setSelectedItems((prev) => {
+                let arr = [...prev];
+                if (index !== -1) {
+                  if (e.ctrlKey) {
+                    arr.splice(index, 1);
+                  } else {
+                    arr = [newSelected];
+                  }
+                } else {
+                  if (e.ctrlKey) {
+                    if (whereToInsert !== -1) {
+                      arr.splice(whereToInsert, 0, newSelected);
+                    } else {
+                      arr = arr.concat([newSelected]);
+                    }
+                  } else {
+                    arr = [newSelected];
+                  }
+                }
+
+                return arr;
+              });
             }}
-            onMouseUp={() => setDragging(false)}
             key={`day-${day}-range-${i}`}
             className="position-absolute w-100"
-            style={{ top: 0, left: 0, zIndex: active === i ? 15 : 0 }}
+            style={{ top: 0, left: 0, zIndex: active === i ? 15 : 0, paddingTop: "7px" }}
           >
             <Range
               value={x.range.map((b) => (b / x.from) * maxValue)}
@@ -147,9 +268,6 @@ const DayTimeline = ({
                     arr.splice(i, 1);
                     return arr;
                   });
-                  if (selectedItem.day === day && selectedItem.rangeIndex === i) {
-                    setSelectedItem((prev) => Object.assign({}, prev, { day: -1, rangeIndex: -1 }));
-                  }
                 }
               }}
               step={1}
@@ -164,10 +282,7 @@ const DayTimeline = ({
               trackStyle={[
                 {
                   borderRadius: "30px",
-                  backgroundColor:
-                    selectedItem.day === day && selectedItem.rangeIndex === i
-                      ? "#336fe8"
-                      : "#2d2d61",
+                  backgroundColor: selectedItems.includes(day + "-" + i) ? "#336fe8" : "#2d2d61",
                   height: "30px",
                   top: "-7px",
                   cursor: "grab",
@@ -179,12 +294,8 @@ const DayTimeline = ({
         );
       })}
       <div
-        onMouseDown={() => setDragging(true)}
-        onMouseUp={() => {
-          setDragging(false);
-        }}
         className="position-absolute w-100"
-        style={{ top: 0, left: 0, zIndex: active === -1 ? 15 : 0 }}
+        style={{ top: 0, left: 0, zIndex: active === -1 ? 15 : 0, paddingTop: "7px" }}
       >
         <Range
           value={newRange}
@@ -194,12 +305,12 @@ const DayTimeline = ({
               finalValue = val;
             //forcing input not to have value within neighbours ranges
             while (!found && it < ranges.length) {
-              if (isBetween((ranges[it].range[0] / ranges[it].from) * maxValue, val[0], val[1])) {
+              let left = (ranges[it].range[0] / ranges[it].from) * maxValue;
+              let right = (ranges[it].range[1] / ranges[it].from) * maxValue;
+              if (val[0] <= left && left < val[1]) {
                 finalValue[1] = ranges[it].range[0];
                 found = true;
-              } else if (
-                isBetween((ranges[it].range[1] / ranges[it].from) * maxValue, val[0], val[1])
-              ) {
+              } else if (val[0] < right && right <= val[1]) {
                 finalValue[0] = ranges[it].range[1];
                 found = true;
               }
@@ -210,32 +321,7 @@ const DayTimeline = ({
             }
           }}
           onAfterChange={() => {
-            setDragging(false);
-            let rangeIndex = -1;
-            if (newRange[0] !== newRange[1]) {
-              //inserting range at correct position. Ranges are ordered in ascending order.
-              setRanges((prev) => {
-                let arr = [...prev];
-                let it = 0;
-                while (rangeIndex === -1 && it < arr.length) {
-                  if (arr[it].range[0] >= newRange[1]) {
-                    rangeIndex = it;
-                    arr.splice(it, 0, { range: newRange, from: maxValue });
-                  }
-                  it++;
-                }
-
-                if (rangeIndex === -1) {
-                  rangeIndex = it;
-                  arr = arr.concat([{ range: newRange, from: maxValue }]);
-                }
-                return arr;
-              });
-              setSelectedItem((prev) =>
-                Object.assign({}, prev, { day: day, rangeIndex: rangeIndex })
-              );
-            }
-
+            addNewRange(newRange);
             setNewRange([]);
           }}
           step={1}
@@ -275,71 +361,9 @@ const Times = ({ size, cellWidth, interval, totalMinutes }) => {
   );
 };
 
-const useStyles = makeStyles({
-  steps: {
-    // borderBottom: "1px solid #f9dea5",
-    position: "relative",
-    "&::after": {
-      height: "10px",
-      position: "absolute",
-      top: 0,
-      right: 0,
-      content: '""',
-      borderRight: "1px solid #f9dea5",
-    },
-  },
-
-  bigStep: {
-    height: "10px",
-  },
-
-  smallStep: {
-    height: "5px",
-  },
-
-  step: {
-    borderLeft: "1px solid #f9dea5",
-  },
-});
-
-const Steps = ({ totalMinutes, step, interval, cellWidth }) => {
-  const stepWidth = cellWidth / (interval / step);
-  const stepsAmount = totalMinutes / step;
-
-  const classes = useStyles();
-  return (
-    <div
-      className={`d-flex align-items-end ${classes.steps}`}
-      style={{
-        width: cellWidth * (totalMinutes / interval),
-      }}
-    >
-      {new Array(stepsAmount).fill(0).map((x, i) => (
-        <div
-          key={`step-${i}`}
-          className={
-            classes.step + " " + ((i * step) % interval === 0 ? classes.bigStep : classes.smallStep)
-          }
-          style={{
-            width: stepWidth,
-          }}
-        ></div>
-      ))}
-    </div>
-  );
-};
-
 const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
-  const totalMinutes = 24 * 60;
   const leftPadding = 17;
-  const cellHeight = 50;
-
-  const zoomOptions = [
-    { interval: 120, name: "2h", cellWidth: 70, step: 15 },
-    { interval: 60, name: "1h", cellWidth: 72, step: 15 },
-    { interval: 30, name: "30m", cellWidth: 74, step: 15 },
-    { interval: 15, name: "15m", cellWidth: 76, step: 15 },
-  ];
+  const { totalMinutes, zoomOptions, cellHeight, showLines } = settings;
 
   const scrollableContainer = useRef(null);
   const zoomableContainer = useRef(null);
@@ -348,9 +372,8 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   const zooming = useRef(false);
   const [zoomOption, setZoomOption] = useState(1);
   const [dragging, setDragging] = useState(false);
-  const [draggingPaused, setDraggingPaused] = useState(false);
   const scrollInterval = useRef(null);
-  const [selectedItem, setSelectedItem] = useState({ day: -1, rangeIndex: -1, mouseX: -1 });
+  const [selectedItems, setSelectedItems] = useState([]);
 
   const cellWidth = zoomOptions[zoomOption].cellWidth;
   const interval = zoomOptions[zoomOption].interval;
@@ -359,6 +382,12 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
 
   const [scrollRightSpeed, setScrollRightSpeed] = useState(0);
   const [scrollLeftSpeed, setScrollLeftSpeed] = useState(0);
+
+  useEffect(() => {
+    window.addEventListener("mouseup", () => {
+      setDragging(false);
+    });
+  });
 
   useEffect(() => {
     let interval;
@@ -437,6 +466,31 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
     }
   };
 
+  const onGroup = () => {
+    let si = [...selectedItems];
+    let begin = si[0].split("-").map((x) => parseInt(x));
+    let end = si[1].split("-").map((x) => parseInt(x));
+    if (begin[0] !== end[0]) {
+      //days differs
+    }
+    for (let i = +si[0].split("-")[0]; i < +si[si.length - 1].split("-")[0]; i++) {}
+  };
+
+  const onDelete = () => {
+    if (selectedItems.length) {
+      setCurrentSchedule((prev) => {
+        let arr = [...prev];
+        for (let i = selectedItems.length - 1; i >= 0; i--) {
+          let s = selectedItems[i].split("-").map((y) => parseInt(y));
+          arr[s[0]].splice(s[1], 1);
+        }
+
+        return arr;
+      });
+      setSelectedItems((prev) => prev.filter((_, i) => i < 0));
+    }
+  };
+
   useEffect(() => {
     if (zoomableContainer) {
       zoomableContainer.current.addEventListener("wheel", onZoom, {
@@ -453,40 +507,28 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
       <div className="p-4 w-100" style={{ background: "rgb(255, 249, 241)", overflowX: "auto" }}>
         <div
           className="d-flex justify-content-end mb-3"
-          style={{ opacity: selectedItem.day === -1 ? 0 : 1 }}
+          style={{ opacity: !selectedItems.length ? 0 : 1 }}
         >
-          <div
-            className="px-4"
-            style={{
-              height: "30px",
-              borderRadius: "30px",
-              background: "#2d2d61",
-              color: "white",
-              lineHeight: "30px",
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              if (selectedItem.day !== -1) {
-                setCurrentSchedule((prev) => {
-                  let arr = [...prev];
-                  arr[selectedItem.day].splice(selectedItem.rangeIndex, 1);
-                  return arr;
-                });
-                setSelectedItem((prev) => Object.assign({}, prev, { day: -1, rangeIndex: -1 }));
-              }
-            }}
-            variant="contained"
-            color="secondary"
-          >
+          {/* {selectedItems.length >= 2 && (
+            <FormButton
+              onClick={onGroup}
+              style={{ marginRight: "20px", fontSize: "14px", padding: "4px 40px" }}
+            >
+              Group
+            </FormButton>
+          )} */}
+
+          <FormButton style={{ fontSize: "14px", padding: "4px 40px" }} onClick={onDelete}>
             Delete
-          </div>
+          </FormButton>
         </div>
         <div className="d-flex" style={{ maxWidth: "1000px" }}>
           <div className="pr-3">
             <div
-              style={{ height: "60px", textAlign: "center", fontWeight: "700", color: "#2d2d61" }}
+              style={{ height: "68px", textAlign: "center", fontWeight: "700", color: "#2d2d61" }}
             >
-              TIME
+              <div>TIME</div>
+              <div style={{ fontSize: "12px" }}>{zoomOptions[zoomOption].name} interval</div>
             </div>
             {moment.weekdays().map((x, i) => (
               <div key={`day-name-${i}`} style={{ height: cellHeight }}>
@@ -515,18 +557,26 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
               setScrollRightSpeed(0);
             }}
             onMouseMove={(e) => {
-              if (dragging && !draggingPaused) {
+              if (dragging) {
                 var bounds = e.currentTarget.getBoundingClientRect();
                 var x = e.clientX - bounds.left;
 
                 if (e.currentTarget.offsetWidth - x < 120) {
-                  setScrollRightSpeed(1.5);
+                  if (e.currentTarget.offsetWidth - x < 50) {
+                    setScrollRightSpeed(2);
+                  } else {
+                    setScrollRightSpeed(1.5);
+                  }
                 } else {
                   setScrollRightSpeed(0);
                 }
 
                 if (x < 120) {
-                  setScrollLeftSpeed(1.3);
+                  if (x < 50) {
+                    setScrollLeftSpeed(1.8);
+                  } else {
+                    setScrollLeftSpeed(1.3);
+                  }
                 } else {
                   setScrollLeftSpeed(0);
                 }
@@ -540,6 +590,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
               ref={scrollableContainer}
               className="pb-3"
               style={{
+                height: 9 * 50 + 10,
                 width: "100%",
                 overflowX: "auto",
                 overflowY: "hidden",
@@ -553,42 +604,57 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                 cellWidth={cellWidth}
                 totalMinutes={totalMinutes}
               ></Times>
-              <Steps
-                interval={interval}
-                step={step}
-                cellWidth={cellWidth}
-                totalMinutes={totalMinutes}
-              ></Steps>
               <div className="position-relative">
-                <div>
-                  <table
-                    style={{ width: `${size}px` }}
-                    onClick={() =>
-                      setSelectedItem((prev) =>
-                        Object.assign({}, prev, { day: -1, rangeIndex: -1 })
-                      )
-                    }
+                <div
+                  style={{
+                    width: size,
+                  }}
+                >
+                  <div
+                    className="d-flex align-items-end"
+                    style={{
+                      height: "11px",
+                      borderBottom: "1px solid #f9dea5",
+                      borderRight: "1.5px solid #f9dea5",
+                    }}
                   >
-                    <tbody>
-                      {new Array(8).fill(0).map((x, i) => (
-                        <tr key={`grid-row-${i}`}>
-                          {new Array(totalMinutes / interval).fill(0).map((_, j) => (
-                            <td
-                              key={`row-${i}-cell-${j}`}
-                              style={{
-                                height: cellHeight,
-                                width: cellWidth,
-                              }}
-                            ></td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                    {new Array(totalMinutes / (showLines ? step : interval)).fill(0).map((x, i) => (
+                      <div
+                        style={{
+                          height: (i * step) % interval === 0 ? "10px" : "5px",
+                          borderLeft: `${i % (interval / step) === 0 ? 1.5 : 1}px solid #f9dea5`,
+                          width: showLines ? cellWidth / (interval / step) : cellWidth,
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                  {new Array(8).fill(0).map((x, i) => (
+                    <div
+                      className="d-flex"
+                      key={`grid-row-${i}`}
+                      style={{ height: cellHeight, borderRight: "1.5px solid #f9dea5" }}
+                    >
+                      {new Array(totalMinutes / (showLines ? step : interval))
+                        .fill(0)
+                        .map((_, j) => (
+                          <div
+                            key={`row-${i}-cell-${j}`}
+                            style={{
+                              borderLeft: `${
+                                j % (interval / step) === 0 ? 1.5 : 1
+                              }px solid #f9dea5`,
+                              borderBottom: "1px solid #f9dea5",
+                              width: showLines ? cellWidth / (interval / step) : cellWidth,
+                            }}
+                          ></div>
+                        ))}
+                    </div>
+                  ))}
                 </div>
                 <div
-                  onMouseEnter={() => setDraggingPaused(false)}
-                  onMouseLeave={() => setDraggingPaused(true)}
+                  onClick={() => setSelectedItems((prev) => prev.filter((_, i) => i < 0))}
+                  onMouseUp={() => setDragging(false)}
+                  onMouseDown={() => setDragging(true)}
                   ref={(el) => {
                     if (el) {
                       zoomableContainer.current = el;
@@ -597,13 +663,16 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                   }}
                   style={{
                     position: "absolute",
-                    width: `${size}px`,
-                    top: "43px",
+                    width: size,
+                    top: 0,
+                    left: 0,
+                    paddingTop: "45px",
                   }}
                 >
                   {currentSchedule.map((x, i) => (
                     <DayTimeline
-                      draggingPaused={draggingPaused}
+                      showLines={showLines}
+                      allRanges={currentSchedule}
                       ranges={x}
                       setRanges={(fn) => {
                         let newValue = fn(currentSchedule[i]);
@@ -613,8 +682,8 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                           return arr;
                         });
                       }}
-                      setSelectedItem={setSelectedItem}
-                      selectedItem={selectedItem}
+                      setSelectedItems={setSelectedItems}
+                      selectedItems={selectedItems}
                       setDragging={setDragging}
                       dragging={dragging}
                       totalMinutes={totalMinutes}

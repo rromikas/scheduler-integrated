@@ -13,14 +13,19 @@ import TimezoneSelectorMap from "components/TimezoneSelectorMap";
 import ReviewAndSave from "components/ReviewAndSave";
 import ScheduleThumbnail from "components/ScheduleThumbnail";
 import { v4 as uuidv4 } from "uuid";
+import settings from "components/Schedular/settings";
+
+const { totalMinutes } = settings;
 
 const styles = {
   titlePrimary: {
     fontStyle: "italic",
     fontWeight: 400,
+    fontFamily: "Poppins",
     color: "#2d2d61",
   },
   titleSecondary: {
+    fontFamily: "Poppins",
     fontWeight: 900,
     color: "#2d2d61",
   },
@@ -94,14 +99,6 @@ const Index = (props) => {
     }
   };
 
-  const addTimingsToCurrentSchedule = (timings) => {
-    const newSchedule = {
-      ...currentSchedule,
-      timings,
-    };
-    setCurrentSchedule(newSchedule);
-  };
-
   const handleNextButton = () => {
     if (buttonText === "Save") {
       let finalSchedule = {
@@ -117,6 +114,17 @@ const Index = (props) => {
         ),
         finalSchedule,
       ]);
+
+      const jsonSchedule = generateJSON(finalSchedule);
+
+      console.log("JSON schedule: ", jsonSchedule);
+
+      fetch("https://google.com", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(jsonSchedule),
+      });
+
       resetState();
       setState({ drawerOpen: false });
     }
@@ -124,9 +132,20 @@ const Index = (props) => {
     if (screenValue < screens.length - 1) setScreenValue((previousValue) => previousValue + 1);
   };
 
-  const splitHoursMinutes = (timeValue) => {
-    const [hours, minutes] = timeValue.split(":");
-    return [parseInt(hours) * 60, parseInt(minutes)];
+  const generateJSON = (schedule) => {
+    let json = { ...schedule };
+    json.zone = json.timezone.value;
+    delete json["timezone"];
+    let timings = [];
+    json.timings.forEach((x, i) => {
+      x.forEach((y) => {
+        let begin = i * totalMinutes + (y.range[0] / y.from) * totalMinutes;
+        let end = i * totalMinutes + (y.range[1] / y.from) * totalMinutes;
+        timings.push({ begin, end });
+      });
+    });
+    json.timings = timings;
+    return json;
   };
 
   const resetState = () => {
