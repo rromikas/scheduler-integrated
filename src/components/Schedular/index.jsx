@@ -401,10 +401,27 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   const [scrollRightSpeed, setScrollRightSpeed] = useState(0);
   const [scrollLeftSpeed, setScrollLeftSpeed] = useState(0);
 
+  const [allowZoom, setAllowZoom] = useState(false);
+
   useEffect(() => {
-    window.addEventListener("mouseup", () => {
-      setDragging(false);
-    });
+    const a = () => setDragging(false);
+    const b = (e) => {
+      console.log("e .keycode", e.keyCode, e.which, e.key);
+      if (e.metaKey || e.ctrlKey) {
+        setAllowZoom(true);
+      }
+    };
+    const c = (e) => {
+      setAllowZoom(false);
+    };
+    window.addEventListener("mouseup", a);
+    window.addEventListener("keydown", b);
+    window.addEventListener("keyup", c);
+    return () => {
+      window.removeEventListener("mouseup", a);
+      window.removeEventListener("keydown", b);
+      window.removeEventListener("keyup", c);
+    };
   });
 
   useEffect(() => {
@@ -436,8 +453,8 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, [scrollLeftSpeed]);
 
   const onZoom = (e) => {
-    console.log("on zoom", e.ctrlKey, e.metaKey, e.keyCode);
-    if (e.ctrlKey || e.metaKey) {
+    console.log("allow zoom currnet", allowZoom);
+    if (allowZoom) {
       e.preventDefault();
       if (!zooming.current) {
         zooming.current = true;
@@ -519,7 +536,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
     return () => {
       zoomableContainer.current.removeEventListener("wheel", onZoom);
     };
-  }, [zoomableContainerReady, onZoom, size]);
+  }, [zoomableContainerReady, onZoom, size, allowZoom]);
 
   return (
     <div className="w-100 d-flex flex-center user-select-none" style={{ fontSize: "14px" }}>
