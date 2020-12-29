@@ -1,24 +1,24 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import Button from '@material-ui/core/Button';
-import { withStyles } from '@material-ui/core/styles';
+import React from "react";
+import PropTypes from "prop-types";
+import Button from "@material-ui/core/Button";
+import { withStyles } from "@material-ui/core/styles";
 
 const styles = {
   root: {
-    borderColor: '#2d2d61',
-    textTransform: 'none',
+    borderColor: "#2d2d61",
+    textTransform: "none",
     borderRadius: 30,
-    color: '#2d2d61',
-    fontSize: '18px',
-    padding: '0px 20px',
-    '&:hover': {
-      backgroundColor: '#2d2d61',
-      color: 'white',
-      boxShadow: 'none',
+    color: "#2d2d61",
+    fontSize: "18px",
+    padding: "0px 20px",
+    "&:hover": {
+      backgroundColor: "#2d2d61",
+      color: "white",
+      boxShadow: "none",
     },
-    '&:active': {
-      backgroundColor: '#2d2d61',
-      border: '1px solid #2d2d61',
+    "&:active": {
+      backgroundColor: "#2d2d61",
+      border: "1px solid #2d2d61",
     },
   },
 };

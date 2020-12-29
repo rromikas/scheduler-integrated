@@ -79,23 +79,6 @@ const DayTimeline = ({
     return { rangeIndex, x, mouseY };
   };
 
-  const doesRangeCandidateFit = (values) => {
-    let fits = true,
-      it = 0;
-    while (fits && it < ranges.length) {
-      if (
-        isBetween(values[0], ranges[it].range[0], ranges[it].range[1], true) ||
-        isBetween(values[1], ranges[it].range[0], ranges[it].range[1], true) ||
-        isBetween(ranges[it].range[0], values[0], values[1], true) ||
-        isBetween(ranges[it].range[1], values[0], values[1], true)
-      ) {
-        fits = false;
-      }
-      it++;
-    }
-    return fits;
-  };
-
   const addNewRange = (values) => {
     if (values[0] !== values[1]) {
       let finalValue = values;
@@ -250,7 +233,6 @@ const DayTimeline = ({
             <Range
               value={x.range.map((b) => (b / x.from) * maxValue)}
               onChange={(val) => {
-                console.log("day value", day, val);
                 setRanges((prev) => {
                   let arr = [...prev];
                   arr[i].range = val;
@@ -287,7 +269,6 @@ const DayTimeline = ({
                         }
                       }
                     }
-                    console.log("WTI, FV", whereToInsert, finalValue, day);
                     arr.splice(whereToInsert, 0, {
                       range: finalValue,
                       from: maxValue,
@@ -381,7 +362,7 @@ const Times = ({ size, cellWidth, interval, totalMinutes }) => {
 
 const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   const leftPadding = 17;
-  const { totalMinutes, zoomOptions, cellHeight, showLines } = settings;
+  const { totalMinutes, zoomOptions, cellHeight, showLines, timeGapBetweenZooms } = settings;
 
   const scrollableContainer = useRef(null);
   const zoomableContainer = useRef(null);
@@ -404,23 +385,22 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   const [allowZoom, setAllowZoom] = useState(false);
 
   useEffect(() => {
-    const a = () => setDragging(false);
-    const b = (e) => {
-      console.log("e .keycode", e.keyCode, e.which, e.key);
+    const mouseup = () => setDragging(false);
+    const keydown = (e) => {
       if (e.metaKey || e.ctrlKey) {
         setAllowZoom(true);
       }
     };
-    const c = (e) => {
+    const keyup = () => {
       setAllowZoom(false);
     };
-    window.addEventListener("mouseup", a);
-    window.addEventListener("keydown", b);
-    window.addEventListener("keyup", c);
+    window.addEventListener("mouseup", mouseup);
+    window.addEventListener("keydown", keydown);
+    window.addEventListener("keyup", keyup);
     return () => {
-      window.removeEventListener("mouseup", a);
-      window.removeEventListener("keydown", b);
-      window.removeEventListener("keyup", c);
+      window.removeEventListener("mouseup", mouseup);
+      window.removeEventListener("keydown", keydown);
+      window.removeEventListener("keyup", keyup);
     };
   });
 
@@ -453,7 +433,6 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, [scrollLeftSpeed]);
 
   const onZoom = (e) => {
-    console.log("allow zoom currnet", allowZoom);
     if (allowZoom) {
       e.preventDefault();
       if (!zooming.current) {
@@ -467,7 +446,10 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
           let percentsOfTimeline = (x + oldScrollLeft - leftPadding) / oldSize;
           let a = newTimelineSize * percentsOfTimeline;
           let target = a + leftPadding - x;
-          target = target >= 0 ? target : 0;
+          let maxScrollLeft =
+            scrollableContainer.current.scrollWidth - scrollableContainer.current.clientWidth;
+          target = target > maxScrollLeft ? maxScrollLeft : target < 0 ? 0 : target;
+
           if (scrollInterval.current) {
             clearInterval(scrollInterval.current);
           }
@@ -497,7 +479,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
         }
         setTimeout(() => {
           zooming.current = false;
-        }, 20);
+        }, timeGapBetweenZooms);
       }
     }
   };
@@ -536,7 +518,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
     return () => {
       zoomableContainer.current.removeEventListener("wheel", onZoom);
     };
-  }, [zoomableContainerReady, onZoom, size, allowZoom]);
+  }, [zoomableContainerReady, onZoom, size]);
 
   return (
     <div className="w-100 d-flex flex-center user-select-none" style={{ fontSize: "14px" }}>
@@ -647,6 +629,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                   >
                     {new Array(totalMinutes / (showLines ? step : interval)).fill(0).map((x, i) => (
                       <div
+                        key={`step-${i}`}
                         style={{
                           height: (i * step) % interval === 0 ? "10px" : "5px",
                           borderLeft: `${i % (interval / step) === 0 ? 1.5 : 1}px solid #f9dea5`,

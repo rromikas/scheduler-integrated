@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import moment from "moment";
 import fetch from "node-fetch";
 
 import { Drawer, Container, Grid, Box, Typography, IconButton } from "@material-ui/core";
@@ -14,6 +13,10 @@ import ReviewAndSave from "components/ReviewAndSave";
 import ScheduleThumbnail from "components/ScheduleThumbnail";
 import { v4 as uuidv4 } from "uuid";
 import settings from "components/Schedular/settings";
+import ConfirmDialog from "components/ConfirmDialog";
+import { createConfirmation } from "react-confirm";
+
+const confirm = createConfirmation(ConfirmDialog);
 
 const { totalMinutes } = settings;
 
@@ -54,6 +57,7 @@ const screens = [
 
 const Index = (props) => {
   const [state, setState] = useState({ drawerOpen: false });
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [screenValue, setScreenValue] = useState(0);
   const [pageTitle, setPageTitle] = useState(screens[0].pageTitle);
   const [buttonText, setButtonText] = useState(screens[0].buttonText);
@@ -208,8 +212,12 @@ const Index = (props) => {
                   <Grid key={index} item>
                     <ScheduleThumbnail
                       schedule={schedule}
-                      deleteScd={() => {
-                        handleDeleteClick(schedule.schedule_id);
+                      deleteScd={async () => {
+                        if (
+                          await confirm({ confirmation: "Do you want to delete the schedule?" })
+                        ) {
+                          handleDeleteClick(schedule.schedule_id);
+                        }
                       }}
                       onClick={() => {
                         setScreenValue(1);
@@ -234,7 +242,11 @@ const Index = (props) => {
           <IconButton aria-label="goback" onClick={handlePreviousButton}>
             <ArrowBackIcon fontSize="large" />
           </IconButton>
-          <Box component="span" className="schedule-title">
+          <Box
+            component="span"
+            className="schedule-title"
+            style={{ fontSize: "22px", fontWeight: 600, color: "#021a53" }}
+          >
             {pageTitle}
           </Box>
         </Box>
