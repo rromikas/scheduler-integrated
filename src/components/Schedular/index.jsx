@@ -387,6 +387,10 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   useEffect(() => {
     const mouseup = () => setDragging(false);
     const keydown = (e) => {
+      console.log(
+        "Your pressed key code: " + e.keyCode || e.which,
+        ", is it metaKey: " + e.metaKey
+      );
       if (e.metaKey || e.ctrlKey) {
         setAllowZoom(true);
       }
@@ -447,7 +451,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
           let a = newTimelineSize * percentsOfTimeline;
           let target = a + leftPadding - x;
           let maxScrollLeft =
-            scrollableContainer.current.scrollWidth - scrollableContainer.current.clientWidth;
+            newTimelineSize + 2 * leftPadding - scrollableContainer.current.clientWidth;
           target = target > maxScrollLeft ? maxScrollLeft : target < 0 ? 0 : target;
 
           if (scrollInterval.current) {
