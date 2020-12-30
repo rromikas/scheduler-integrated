@@ -29,3 +29,28 @@ table {
 .user-select-none {
   user-select: none;
 }
+
+.focus-outline-0:focus {
+  outline: 0;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+
+.appear {
+  opacity: 0;
+  animation-name: appear;
+  animation-fill-mode: forwards;
+  animation-timing-function: step-end;
+  animation-duration: 0.02s;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

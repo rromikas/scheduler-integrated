@@ -32,6 +32,8 @@ const DayTimeline = ({
   setRanges,
   showLines,
   allRanges,
+  animation,
+  pageRef,
 }) => {
   // const [ranges, setRanges] = useState([]);
   const [active, setActive] = useState(-2);
@@ -131,7 +133,7 @@ const DayTimeline = ({
         e.stopPropagation();
       }}
       style={{ height: "30px", marginBottom: "20px" }}
-      className="w-100 position-relative"
+      className={`w-100 position-relative ${animation === "started" ? "opacity-0" : "appear"}`}
       onMouseUp={() => {
         addNewRange(rangeCandidate);
         setRangeCandidate([]);
@@ -241,6 +243,7 @@ const DayTimeline = ({
                 });
               }}
               onAfterChange={(val) => {
+                pageRef.current.focus({ preventScroll: true }); // this is necesary for zooming funcionality, page ref has keydown listener.
                 if (val[0] === val[1]) {
                   setRanges((prev) => {
                     let arr = [...prev];
@@ -320,6 +323,7 @@ const DayTimeline = ({
             }
           }}
           onAfterChange={() => {
+            pageRef.current.focus({ preventScroll: true }); // this is necesary for zooming funcionality, page ref has keydown listener.
             addNewRange(newRange);
             setNewRange([]);
           }}
@@ -373,6 +377,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   const [dragging, setDragging] = useState(false);
   const scrollInterval = useRef(null);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [animation, setAnimation] = useState(false);
 
   const cellWidth = zoomOptions[zoomOption].cellWidth;
   const interval = zoomOptions[zoomOption].interval;
@@ -383,30 +388,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   const [scrollLeftSpeed, setScrollLeftSpeed] = useState(0);
 
   const [allowZoom, setAllowZoom] = useState(false);
-
-  useEffect(() => {
-    const mouseup = () => setDragging(false);
-    const keydown = (e) => {
-      console.log(
-        "Your pressed key code: " + e.keyCode || e.which,
-        ", is it metaKey: " + e.metaKey
-      );
-      if (e.metaKey || e.ctrlKey) {
-        setAllowZoom(true);
-      }
-    };
-    const keyup = () => {
-      setAllowZoom(false);
-    };
-    window.addEventListener("mouseup", mouseup);
-    window.addEventListener("keydown", keydown);
-    window.addEventListener("keyup", keyup);
-    return () => {
-      window.removeEventListener("mouseup", mouseup);
-      window.removeEventListener("keydown", keydown);
-      window.removeEventListener("keyup", keyup);
-    };
-  });
+  const pageRef = useRef(null);
 
   useEffect(() => {
     let interval;
@@ -458,24 +440,40 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
             clearInterval(scrollInterval.current);
           }
 
+          let maxIntervals = 5,
+            intervals = 0;
+
           scrollInterval.current = setInterval(() => {
             let diff = target - scrollableContainer.current.scrollLeft;
+            intervals++;
             if (isBetween(scrollableContainer.current.scrollLeft, target - 1, target + 1)) {
+              setAnimation("ended");
               clearInterval(scrollInterval.current);
             } else {
               scrollableContainer.current.scrollLeft += diff;
+            }
+
+            if (intervals === maxIntervals) {
+              setAnimation("ended");
+              clearInterval(scrollInterval.current);
             }
           }, 1);
         };
 
         if (e.deltaY < 0) {
           let zoomOpt = zoomOption < zoomOptions.length - 1 ? zoomOption + 1 : zoomOption;
+          if (!(zoomOpt === zoomOption && zoomOption === zoomOptions.length - 1)) {
+            setAnimation("started");
+          }
           focusOnPoint(
             (totalMinutes / zoomOptions[zoomOpt].interval) * zoomOptions[zoomOpt].cellWidth
           );
           setZoomOption(zoomOpt);
         } else if (e.deltaY > 0) {
           let zoomOpt = zoomOption > 0 ? zoomOption - 1 : zoomOption;
+          if (!(zoomOpt === zoomOption && zoomOpt === 0)) {
+            setAnimation("started");
+          }
           focusOnPoint(
             (totalMinutes / zoomOptions[zoomOpt].interval) * zoomOptions[zoomOpt].cellWidth
           );
@@ -486,16 +484,6 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
         }, timeGapBetweenZooms);
       }
     }
-  };
-
-  const onGroup = () => {
-    let si = [...selectedItems];
-    let begin = si[0].split("-").map((x) => parseInt(x));
-    let end = si[1].split("-").map((x) => parseInt(x));
-    if (begin[0] !== end[0]) {
-      //days differs
-    }
-    for (let i = +si[0].split("-")[0]; i < +si[si.length - 1].split("-")[0]; i++) {}
   };
 
   const onDelete = () => {
@@ -514,7 +502,44 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   };
 
   useEffect(() => {
-    if (zoomableContainer) {
+    const mouseup = () => setDragging(false);
+    window.addEventListener("mouseup", mouseup);
+    return () => {
+      window.removeEventListener("mouseup", mouseup);
+    };
+  });
+
+  useEffect(() => {
+    const keydown = (e) => {
+      if (e.metaKey || e.ctrlKey) {
+        setAllowZoom(true);
+      }
+    };
+    const keyup = () => {
+      setAllowZoom(false);
+    };
+    const mouseenter = () => {
+      pageRef.current.focus({ preventScroll: true });
+    };
+    const mouseleave = () => {
+      pageRef.current.blur();
+    };
+    if (pageRef.current) {
+      pageRef.current.addEventListener("mouseenter", mouseenter);
+      pageRef.current.addEventListener("mouseleave", mouseleave);
+      pageRef.current.addEventListener("keydown", keydown);
+      pageRef.current.addEventListener("keyup", keyup);
+    }
+    return () => {
+      pageRef.current.removeEventListener("mouseenter", mouseenter);
+      pageRef.current.removeEventListener("mouseleave", mouseleave);
+      pageRef.current.removeEventListener("keydown", keydown);
+      pageRef.current.removeEventListener("keyup", keyup);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (zoomableContainer.current) {
       zoomableContainer.current.addEventListener("wheel", onZoom, {
         passive: false,
       });
@@ -522,10 +547,15 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
     return () => {
       zoomableContainer.current.removeEventListener("wheel", onZoom);
     };
-  }, [zoomableContainerReady, onZoom, size]);
+  }, [allowZoom, size]);
 
   return (
-    <div className="w-100 d-flex flex-center user-select-none" style={{ fontSize: "14px" }}>
+    <div
+      tabIndex={1}
+      className="w-100 d-flex flex-center user-select-none focus-outline-0"
+      style={{ fontSize: "14px" }}
+      ref={pageRef}
+    >
       <div className="p-4 w-100" style={{ background: "rgb(255, 249, 241)", overflowX: "auto" }}>
         <div
           className="d-flex justify-content-end mb-3"
@@ -669,12 +699,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                   onClick={() => setSelectedItems((prev) => prev.filter((_, i) => i < 0))}
                   onMouseUp={() => setDragging(false)}
                   onMouseDown={() => setDragging(true)}
-                  ref={(el) => {
-                    if (el) {
-                      zoomableContainer.current = el;
-                      setZoomableContainerReady(true);
-                    }
-                  }}
+                  ref={zoomableContainer}
                   style={{
                     position: "absolute",
                     width: size,
@@ -685,6 +710,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                 >
                   {currentSchedule.map((x, i) => (
                     <DayTimeline
+                      pageRef={pageRef}
                       showLines={showLines}
                       allRanges={currentSchedule}
                       ranges={x}
@@ -706,6 +732,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                       size={{ width: size }}
                       step={step}
                       day={i}
+                      animation={animation}
                     ></DayTimeline>
                   ))}
                 </div>
