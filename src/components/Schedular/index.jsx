@@ -304,7 +304,11 @@ const DayTimeline = ({
         );
       })}
       <div
-        onMouseDown={() => setSelectedItems([])}
+        onMouseDown={(e) => {
+          if (!e.shiftKey) {
+            setSelectedItems([]);
+          }
+        }}
         className="position-absolute w-100"
         style={{
           top: 0,
@@ -696,7 +700,11 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                   ))}
                 </div>
                 <div
-                  onClick={() => setSelectedItems((prev) => prev.filter((_, i) => i < 0))}
+                  onClick={(e) => {
+                    if (!e.shiftKey) {
+                      setSelectedItems((prev) => prev.filter((_, i) => i < 0));
+                    }
+                  }}
                   onMouseUp={() => setDragging(false)}
                   onMouseDown={() => setDragging(true)}
                   ref={zoomableContainer}
