@@ -572,7 +572,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
         <div className="d-flex">
           <div className="pr-3">
             <div
-              style={{ height: "68px", textAlign: "center", fontWeight: "700", color: "#2d2d61" }}
+              style={{ height: "69px", textAlign: "center", fontWeight: "700", color: "#2d2d61" }}
             >
               <div>TIME</div>
               <div style={{ fontSize: "12px" }}>{zoomOptions[zoomOption].name} interval</div>
