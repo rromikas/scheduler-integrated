@@ -1,5 +1,6 @@
 const settings = {
   showLines: true,
+  zoomOnWheel: true,
   zoomOptions: [
     { interval: 120, name: "2h", cellWidth: 70, step: 15 },
     { interval: 60, name: "1h", cellWidth: 72, step: 15 },

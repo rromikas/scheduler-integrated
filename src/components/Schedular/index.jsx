@@ -370,7 +370,14 @@ const Times = ({ size, cellWidth, interval, totalMinutes }) => {
 
 const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   const leftPadding = 17;
-  const { totalMinutes, zoomOptions, cellHeight, showLines, timeGapBetweenZooms } = settings;
+  const {
+    totalMinutes,
+    zoomOptions,
+    cellHeight,
+    showLines,
+    timeGapBetweenZooms,
+    zoomOnWheel,
+  } = settings;
 
   const scrollableContainer = useRef(null);
   const zoomableContainer = useRef(null);
@@ -381,7 +388,6 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   const [dragging, setDragging] = useState(false);
   const scrollInterval = useRef(null);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [animation, setAnimation] = useState(false);
 
   const cellWidth = zoomOptions[zoomOption].cellWidth;
   const interval = zoomOptions[zoomOption].interval;
@@ -423,7 +429,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, [scrollLeftSpeed]);
 
   const onZoom = (e) => {
-    if (allowZoom) {
+    if (zoomOnWheel || allowZoom) {
       e.preventDefault();
       if (!zooming.current) {
         zooming.current = true;
@@ -451,14 +457,12 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
             let diff = target - scrollableContainer.current.scrollLeft;
             intervals++;
             if (isBetween(scrollableContainer.current.scrollLeft, target - 1, target + 1)) {
-              setAnimation("ended");
               clearInterval(scrollInterval.current);
             } else {
               scrollableContainer.current.scrollLeft += diff;
             }
 
             if (intervals === maxIntervals) {
-              setAnimation("ended");
               clearInterval(scrollInterval.current);
             }
           }, 1);
@@ -466,18 +470,14 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
 
         if (e.deltaY < 0) {
           let zoomOpt = zoomOption < zoomOptions.length - 1 ? zoomOption + 1 : zoomOption;
-          if (!(zoomOpt === zoomOption && zoomOption === zoomOptions.length - 1)) {
-            setAnimation("started");
-          }
+
           focusOnPoint(
             (totalMinutes / zoomOptions[zoomOpt].interval) * zoomOptions[zoomOpt].cellWidth
           );
           setZoomOption(zoomOpt);
         } else if (e.deltaY > 0) {
           let zoomOpt = zoomOption > 0 ? zoomOption - 1 : zoomOption;
-          if (!(zoomOpt === zoomOption && zoomOpt === 0)) {
-            setAnimation("started");
-          }
+
           focusOnPoint(
             (totalMinutes / zoomOptions[zoomOpt].interval) * zoomOptions[zoomOpt].cellWidth
           );
@@ -740,7 +740,6 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                       size={{ width: size }}
                       step={step}
                       day={i}
-                      animation={animation}
                     ></DayTimeline>
                   ))}
                 </div>
