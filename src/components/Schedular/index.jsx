@@ -6,6 +6,8 @@ import "./styles/style.css";
 import moment from "moment";
 import settings from "./settings";
 import FormButton from "components/FormButton";
+import GetMouseUser from "./scripts/getMouseUserOnWheel";
+import { onTouchStart, onTouchEnd, onTouchMove } from "./scripts/touchEventsHandlers";
 
 function isBetween(x, min, max, strict = false) {
   return !strict ? x >= min && x <= max : x > min && x < max;
@@ -381,7 +383,6 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
 
   const scrollableContainer = useRef(null);
   const zoomableContainer = useRef(null);
-  const [zoomableContainerReady, setZoomableContainerReady] = useState(false);
 
   const zooming = useRef(false);
   const [zoomOption, setZoomOption] = useState(1);
@@ -389,9 +390,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   const scrollInterval = useRef(null);
   const [selectedItems, setSelectedItems] = useState([]);
 
-  const cellWidth = zoomOptions[zoomOption].cellWidth;
-  const interval = zoomOptions[zoomOption].interval;
-  const step = zoomOptions[zoomOption].step;
+  const { cellWidth, interval, step } = zoomOptions[zoomOption];
   const size = (totalMinutes / interval) * cellWidth;
 
   const [scrollRightSpeed, setScrollRightSpeed] = useState(0);
@@ -428,65 +427,62 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
     };
   }, [scrollLeftSpeed]);
 
-  const onZoom = (e) => {
-    if (zoomOnWheel || allowZoom) {
-      e.preventDefault();
-      if (!zooming.current) {
-        zooming.current = true;
-        var bounds = scrollableContainer.current.getBoundingClientRect();
-        var x = e.clientX - bounds.left;
-        const oldSize = size;
-        const oldScrollLeft = scrollableContainer.current.scrollLeft;
+  const onZoom = (targetX, direction) => {
+    if (!zooming.current) {
+      zooming.current = true;
+      var bounds = scrollableContainer.current.getBoundingClientRect();
+      var x = targetX - bounds.left;
+      const oldSize = size;
+      const oldScrollLeft = scrollableContainer.current.scrollLeft;
 
-        const focusOnPoint = (newTimelineSize) => {
-          let percentsOfTimeline = (x + oldScrollLeft - leftPadding) / oldSize;
-          let a = newTimelineSize * percentsOfTimeline;
-          let target = a + leftPadding - x;
-          let maxScrollLeft =
-            newTimelineSize + 2 * leftPadding - scrollableContainer.current.clientWidth;
-          target = target > maxScrollLeft ? maxScrollLeft : target < 0 ? 0 : target;
+      const focusOnPoint = (newTimelineSize) => {
+        let percentsOfTimeline = (x + oldScrollLeft - leftPadding) / oldSize;
+        let a = newTimelineSize * percentsOfTimeline;
+        let target = a + leftPadding - x;
+        let maxScrollLeft =
+          newTimelineSize + 2 * leftPadding - scrollableContainer.current.clientWidth;
+        target = target > maxScrollLeft ? maxScrollLeft : target < 0 ? 0 : target;
 
-          if (scrollInterval.current) {
+        if (scrollInterval.current) {
+          clearInterval(scrollInterval.current);
+        }
+
+        let maxIntervals = 5,
+          intervals = 0;
+
+        scrollInterval.current = setInterval(() => {
+          let diff = target - scrollableContainer.current.scrollLeft;
+          intervals++;
+          if (isBetween(scrollableContainer.current.scrollLeft, target - 1, target + 1)) {
             clearInterval(scrollInterval.current);
+          } else {
+            scrollableContainer.current.scrollLeft += diff;
           }
 
-          let maxIntervals = 5,
-            intervals = 0;
+          if (intervals === maxIntervals) {
+            clearInterval(scrollInterval.current);
+          }
+        }, 1);
+      };
 
-          scrollInterval.current = setInterval(() => {
-            let diff = target - scrollableContainer.current.scrollLeft;
-            intervals++;
-            if (isBetween(scrollableContainer.current.scrollLeft, target - 1, target + 1)) {
-              clearInterval(scrollInterval.current);
-            } else {
-              scrollableContainer.current.scrollLeft += diff;
-            }
+      if (direction === "in") {
+        let zoomOpt = zoomOption < zoomOptions.length - 1 ? zoomOption + 1 : zoomOption;
 
-            if (intervals === maxIntervals) {
-              clearInterval(scrollInterval.current);
-            }
-          }, 1);
-        };
+        focusOnPoint(
+          (totalMinutes / zoomOptions[zoomOpt].interval) * zoomOptions[zoomOpt].cellWidth
+        );
+        setZoomOption(zoomOpt);
+      } else if (direction === "out") {
+        let zoomOpt = zoomOption > 0 ? zoomOption - 1 : zoomOption;
 
-        if (e.deltaY < 0) {
-          let zoomOpt = zoomOption < zoomOptions.length - 1 ? zoomOption + 1 : zoomOption;
-
-          focusOnPoint(
-            (totalMinutes / zoomOptions[zoomOpt].interval) * zoomOptions[zoomOpt].cellWidth
-          );
-          setZoomOption(zoomOpt);
-        } else if (e.deltaY > 0) {
-          let zoomOpt = zoomOption > 0 ? zoomOption - 1 : zoomOption;
-
-          focusOnPoint(
-            (totalMinutes / zoomOptions[zoomOpt].interval) * zoomOptions[zoomOpt].cellWidth
-          );
-          setZoomOption(zoomOpt);
-        }
-        setTimeout(() => {
-          zooming.current = false;
-        }, timeGapBetweenZooms);
+        focusOnPoint(
+          (totalMinutes / zoomOptions[zoomOpt].interval) * zoomOptions[zoomOpt].cellWidth
+        );
+        setZoomOption(zoomOpt);
       }
+      setTimeout(() => {
+        zooming.current = false;
+      }, timeGapBetweenZooms);
     }
   };
 
@@ -511,7 +507,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
     return () => {
       window.removeEventListener("mouseup", mouseup);
     };
-  });
+  }, []);
 
   useEffect(() => {
     const keydown = (e) => {
@@ -543,15 +539,36 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
   }, []);
 
   useEffect(() => {
-    if (zoomableContainer.current) {
-      zoomableContainer.current.addEventListener("wheel", onZoom, {
-        passive: false,
-      });
-    }
+    const zoomOnWheel = (e) => {
+      let mouseUser = GetMouseUser(e);
+      if ((mouseUser === "mouse" && allowZoom) || mouseUser === "trackpad") {
+        e.preventDefault();
+        let direction = e.deltaY < 0 ? "in" : e.deltaY > 0 ? "out" : "none";
+        onZoom(e.clientX, direction);
+      }
+    };
+    zoomableContainer.current.addEventListener("wheel", zoomOnWheel, {
+      passive: false,
+    });
+
     return () => {
-      zoomableContainer.current.removeEventListener("wheel", onZoom);
+      zoomableContainer.current.removeEventListener("wheel", zoomOnWheel);
     };
   }, [allowZoom, size]);
+
+  useEffect(() => {
+    const onTouchEndModified = (e) => {
+      onTouchEnd(e, onZoom);
+    };
+    zoomableContainer.current.addEventListener("touchstart", onTouchStart);
+    zoomableContainer.current.addEventListener("touchmove", onTouchMove);
+    zoomableContainer.current.addEventListener("touchend", onTouchEndModified);
+    return () => {
+      zoomableContainer.current.removeEventListener("touchstart", onTouchStart);
+      zoomableContainer.current.removeEventListener("touchmove", onTouchMove);
+      zoomableContainer.current.removeEventListener("touchend", onTouchEndModified);
+    };
+  }, [size]); // We need to have real value of size in onZoom method
 
   return (
     <div
