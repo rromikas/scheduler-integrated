@@ -214,9 +214,11 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
     const zoomOnWheel = (e) => {
       let mouseUser = GetMouseUser(e);
       if ((mouseUser === "mouse" && allowZoom) || mouseUser === "trackpad") {
-        e.preventDefault();
-        let direction = e.deltaY < 0 ? "in" : e.deltaY > 0 ? "out" : "none";
-        onZoom(e.clientX, direction);
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          let direction = e.deltaY < 0 ? "in" : "out";
+          onZoom(e.clientX, direction);
+        }
       }
     };
     zoomableContainer.current.addEventListener("wheel", zoomOnWheel, {
