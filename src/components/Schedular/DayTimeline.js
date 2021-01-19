@@ -7,9 +7,15 @@ import "./styles/style.css";
 /* Range inputs structure:
 <Relative container>
   <Candidate range input>
-  <Many ranges that respresent aleready set values>
-  <New range input correctly displays input handles>
-  <New range input correctly displays input track>
+  <Already set timeslots>
+    <Many divs that respresent aleready set values>
+    <Many transparent input ranges that are above divs and can change timeslots value>
+  <Already set timeslots>
+  <New Range Zone>
+    <Range input for new timeslots>
+    <Outer tooltip zone>
+    <Div that represents new range input value with text inside>
+  <New Range Zone>
 <Relative container>
 */
 
@@ -45,14 +51,37 @@ const DayTimeline = ({
   animation,
   pageRef,
 }) => {
-  const [active, setActive] = useState(-2);
+  const [active, setActive] = useState(-2); // which range of the day mouse is currently over.
   const [newRange, setNewRange] = useState([]);
-  const [rangeCandidate, setRangeCandidate] = useState([]);
-  const maxValue = totalMinutes / step;
-  const rangeStepWidth = cellWidth / (interval / step);
-  const [tooltipPosition, setTooltipPosition] = useState("end");
+  const [rangeCandidate, setRangeCandidate] = useState([]); // range candidate is used for copying ranges
+  const maxValue = totalMinutes / step; // max range input value
+  const rangeStepWidth = cellWidth / (interval / step); // how much pixels is equal to 1 unit of range input
+  const [innerTooltipPosition, setInnerTooltipPosition] = useState("end"); // there are two types of tooltip: inner and outer.
   const strictBetween = true; // tells whether to join two timestamps that are tight neighbours.
+  const handlePushConstant = 10; // this constant helps to position range input handle to follow the mouse tighter
+  const initialNewRangeValue = useRef({ captured: false, value: [], tried: 0 }); // Helps to correctly increment right side of range, when user draw timeslot from right to left
+  const tooltipWidth = 284; // static tooltip width, can not be changed. Helps to position tooltip correctly
 
+  const newRangeWidth = rangeStepWidth * (newRange[1] - newRange[0]);
+
+  //setting tooltip position left based on new range width and protecting it not to go behind container
+  let tooltipPositionLeft = rangeStepWidth * newRange[0] + newRangeWidth / 2 - tooltipWidth / 2;
+  tooltipPositionLeft =
+    tooltipPositionLeft < size.width - tooltipWidth
+      ? tooltipPositionLeft >= 0
+        ? tooltipPositionLeft
+        : 0
+      : size.width - tooltipWidth;
+
+  const baseTrackStyle = {
+    backgroundColor: "rgba(45,45,97,0.7)",
+    borderRadius: 0,
+    height: "72px",
+    cursor: "grab",
+    top: 0,
+  };
+
+  //new range input handler style
   const styleOfInputHandler = (activeState, value) => {
     return {
       height: cellHeight,
@@ -76,6 +105,7 @@ const DayTimeline = ({
     };
   };
 
+  // gets rangeIndex mouse is currently over (and other props)
   const parseMouseEvent = (e) => {
     var bounds = e.currentTarget.getBoundingClientRect();
     var x = Math.round(+(((e.clientX - bounds.left - rangeStepWidth / 2) / size.width) * maxValue));
@@ -137,21 +167,13 @@ const DayTimeline = ({
     }
   };
 
-  const baseTrackStyle = {
-    backgroundColor: "rgba(45,45,97,0.7)",
-    borderRadius: 0,
-    height: "72px",
-    cursor: "grab",
-    top: 0,
-  };
-
-  const initialNewRangeValue = useRef({ captured: false, value: [] });
+  //outer and inner tooltip content is the same. Here it is:
   const Tooltip = () => (
     <div
       style={{
         height: "100%",
         padding: "4px 20px",
-        width: "284px",
+        width: tooltipWidth,
         borderRadius: "29px",
         background: "#021A53",
         display: "flex",
@@ -174,10 +196,6 @@ const DayTimeline = ({
       </div>
     </div>
   );
-
-  const newRangeWidth = rangeStepWidth * (newRange[1] - newRange[0]);
-
-  const handlePushConstant = 10; // this constant helps to position range input handle to follow the mouse tighter
 
   return (
     <div
@@ -274,7 +292,7 @@ const DayTimeline = ({
               className="position-absolute w-100"
               style={{
                 top: 0,
-                left: -handlePushConstant / 1.5,
+                left: -handlePushConstant / 1.3,
                 zIndex: isSelected ? 50 : active === i ? 25 : 0,
               }}
             >
@@ -410,19 +428,21 @@ const DayTimeline = ({
         <div>
           <Range
             onBeforeChange={(val) => {
-              initialNewRangeValue.current = { captured: false, value: val };
+              initialNewRangeValue.current = { captured: false, value: val, tried: 0 };
             }}
             value={newRange}
             onChange={(val) => {
               let finalValue = val;
-              if (!initialNewRangeValue.current.captured) {
+              let { captured, tried } = initialNewRangeValue.current;
+              if (!captured && tried < 4) {
                 if (initialNewRangeValue.current.value[0] > finalValue[0]) {
                   finalValue[1]++;
+                  initialNewRangeValue.current.captured = true;
                 }
-                initialNewRangeValue.current.captured = true;
+                initialNewRangeValue.current.tried++;
               }
 
-              setTooltipPosition(finalValue[0] !== newRange[0] ? "start" : "end");
+              setInnerTooltipPosition(finalValue[0] !== newRange[0] ? "start" : "end");
 
               if (val[1] !== undefined) {
                 setNewRange(newRange.length ? finalValue : [val[1], val[1]]);
@@ -444,51 +464,53 @@ const DayTimeline = ({
         </div>
       </div>
       {newRange.length === 2 && newRange[0] !== newRange[1] && (
-        <div
-          className="position-absolute"
-          style={{
-            top: 0,
-            zIndex: active === -1 ? 14 : 0,
-          }}
-        >
-          <div className="position-relative">
+        <React.Fragment>
+          {newRangeWidth <= 254 && (
             <div
               style={{
                 position: "absolute",
-                top: 0,
-                padding: "6px",
-                left: rangeStepWidth * newRange[0],
-                height: cellHeight,
-                background: "#FF5E00",
-                width: newRangeWidth,
-                pointerEvents: "none",
+                zIndex: 14,
+                top: `-${cellHeight + 10}px`,
+                width: tooltipWidth,
+                left: tooltipPositionLeft,
               }}
             >
-              {newRangeWidth <= 254 && (
-                <div className="w-100 position-relative d-flex justify-content-center">
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: `-${cellHeight + 10}px`,
-                      margin: "auto",
-                    }}
-                  >
-                    <div style={{ height: cellHeight - 12 }}>
-                      <Tooltip></Tooltip>
-                    </div>
-                    <div className="triangle-down mx-auto"></div>
-                  </div>
-                </div>
-              )}
+              <div style={{ height: cellHeight - 12 }}>
+                <Tooltip></Tooltip>
+              </div>
+              <div className="triangle-down mx-auto"></div>
+            </div>
+          )}
+          <div
+            className="position-absolute"
+            style={{
+              top: 0,
+              zIndex: active === -1 ? 14 : 0,
+            }}
+          >
+            <div className="position-relative">
               <div
-                className={`w-100 d-flex justify-content-${tooltipPosition} h-100`}
-                style={{ zIndex: 0 }}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  padding: "6px",
+                  left: rangeStepWidth * newRange[0],
+                  height: cellHeight,
+                  background: "#FF5E00",
+                  width: newRangeWidth,
+                  pointerEvents: "none",
+                }}
               >
-                {newRangeWidth > 254 && <Tooltip></Tooltip>}
+                <div
+                  className={`w-100 d-flex justify-content-${innerTooltipPosition} h-100`}
+                  style={{ zIndex: 0 }}
+                >
+                  {newRangeWidth > 254 && <Tooltip></Tooltip>}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </React.Fragment>
       )}
     </div>
   );

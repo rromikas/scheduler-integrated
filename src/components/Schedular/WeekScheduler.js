@@ -312,27 +312,34 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
             }}
             onMouseMove={(e) => {
               if (dragging) {
-                var bounds = e.currentTarget.getBoundingClientRect();
-                var x = e.clientX - bounds.left;
-
-                if (e.currentTarget.offsetWidth - x < 120) {
-                  if (e.currentTarget.offsetWidth - x < 50) {
-                    setScrollRightSpeed(2);
+                const bounds = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - bounds.left;
+                const maxScroll =
+                  scrollableContainer.current.scrollWidth - scrollableContainer.current.clientWidth;
+                const currentScrollLeft = scrollableContainer.current.scrollLeft;
+                //prevent scrolling when user draw timeslot starting from schedular edge
+                if (maxScroll !== currentScrollLeft) {
+                  if (e.currentTarget.offsetWidth - x < 120) {
+                    if (e.currentTarget.offsetWidth - x < 50) {
+                      setScrollRightSpeed(2);
+                    } else {
+                      setScrollRightSpeed(1.5);
+                    }
                   } else {
-                    setScrollRightSpeed(1.5);
+                    setScrollRightSpeed(0);
                   }
-                } else {
-                  setScrollRightSpeed(0);
                 }
 
-                if (x < 120) {
-                  if (x < 50) {
-                    setScrollLeftSpeed(1.8);
+                if (currentScrollLeft !== 0) {
+                  if (x < 120) {
+                    if (x < 50) {
+                      setScrollLeftSpeed(1.8);
+                    } else {
+                      setScrollLeftSpeed(1.3);
+                    }
                   } else {
-                    setScrollLeftSpeed(1.3);
+                    setScrollLeftSpeed(0);
                   }
-                } else {
-                  setScrollLeftSpeed(0);
                 }
               } else {
                 setScrollRightSpeed(0);
