@@ -359,7 +359,7 @@ const DayTimeline = ({
                 left: rangeStepWidth * (x.range[0] / x.from) * maxValue,
                 width: ((rangeStepWidth * (x.range[1] - x.range[0])) / x.from) * maxValue,
                 background: "#021A53",
-                border: isSelected ? "3px solid #FF5E00" : "none",
+                border: isSelected || active === i ? "3px solid #FF5E00" : "3px solid #021A53",
               }}
             >
               <div className="position-relative h-100">
@@ -371,7 +371,7 @@ const DayTimeline = ({
                     left: 15,
                     transform: isSelected
                       ? `translateY(-16px)`
-                      : `translateY(${(cellHeight - 32) / 2}px)`,
+                      : `translateY(${(cellHeight - 38) / 2}px)`,
                     height: "32px",
                     width: "196px",
                     borderRadius: "36px",
