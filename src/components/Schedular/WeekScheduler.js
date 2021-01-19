@@ -362,10 +362,9 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                   }}
                 >
                   <div
-                    className="d-flex align-items-end"
+                    className="d-flex align-items-end position-relative"
                     style={{
                       marginBottom: "5px",
-                      borderRight: "1.5px solid #021A53",
                     }}
                   >
                     {new Array(totalMinutes / (showLines ? step : interval)).fill(0).map((x, i) => (
@@ -380,6 +379,16 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                         }}
                       ></div>
                     ))}
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: "-2px",
+                        top: 0,
+                        height: "100%",
+                        width: "2px",
+                        background: "rgba(2, 26, 83, 0.2)",
+                      }}
+                    ></div>
                   </div>
                   {new Array(7).fill(0).map((x, i) => (
                     <div
@@ -387,7 +396,6 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                       key={`grid-row-${i}`}
                       style={{
                         height: cellHeight,
-                        borderRight: "2px solid #021A53",
                         marginBottom: "30px",
                         position: "relative",
                       }}
@@ -409,7 +417,8 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                         ))}
                       <div
                         style={{
-                          border: "0.5px solid rgba(0,25,74,0.2)",
+                          borderLeft: "2px solid #021A53",
+                          borderRight: "0.5px solid rgba(0,25,74,0.2)",
                           position: "absolute",
                           borderRadius: "0 37px 37px 0",
                           width: "34px",
@@ -453,6 +462,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                         });
                       }}
                       cellHeight={cellHeight}
+                      cellWidth={cellWidth}
                       setSelectedItems={setSelectedItems}
                       selectedItems={selectedItems}
                       setDragging={setDragging}
@@ -463,6 +473,7 @@ const WeekScheduler = ({ currentSchedule, setCurrentSchedule }) => {
                       size={{ width: size }}
                       step={step}
                       day={i}
+                      dayName={moment.weekdays()[i]}
                     ></DayTimeline>
                   ))}
                 </div>

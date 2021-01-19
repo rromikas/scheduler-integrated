@@ -16,6 +16,12 @@
   font-weight: 600;
 }
 
+@font-face {
+  src: url("./fonts/Poppins-Bold.ttf") format("truetype");
+  font-family: "Poppins";
+  font-weight: 700;
+}
+
 body {
   font-family: "Poppins" !important;
   background-color: #efefef !important;
