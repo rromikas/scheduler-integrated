@@ -470,9 +470,10 @@ const DayTimeline = ({
               style={{
                 position: "absolute",
                 zIndex: 14,
-                top: `-${cellHeight + 10}px`,
+                top: `-${cellHeight + 3}px`,
                 width: tooltipWidth,
                 left: tooltipPositionLeft,
+                height: cellHeight,
               }}
             >
               <div style={{ height: cellHeight - 12 }}>
