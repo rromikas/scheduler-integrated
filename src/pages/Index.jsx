@@ -67,6 +67,7 @@ const Index = (props) => {
   const [currentSchedule, setCurrentSchedule] = useState(new Array(7).fill([]));
   const [scheduleId, setScheduleId] = useState(uuidv4());
   const tableContainerRef = useRef(null);
+  const [weekStart, setWeekStart] = useState(0); // 0 if sunday, 1 if monday
 
   const toggleDrawer = (open) => (event) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) return;
@@ -90,6 +91,9 @@ const Index = (props) => {
           ref={tableContainerRef}
           setCurrentSchedule={setCurrentSchedule}
           currentSchedule={currentSchedule}
+          handlePrevious={handlePreviousButton}
+          weekStart={weekStart}
+          setWeekStart={setWeekStart}
         />
       );
     } else if (screenValue === 2) {
@@ -238,18 +242,20 @@ const Index = (props) => {
         open={state.drawerOpen}
         onClose={() => toggleDrawer(false)}
       >
-        <Box display="flex" alignItems="center">
-          <IconButton aria-label="goback" onClick={handlePreviousButton}>
-            <ArrowBackIcon fontSize="large" />
-          </IconButton>
-          <Box
-            component="span"
-            className="schedule-title"
-            style={{ fontSize: "22px", fontWeight: 600, color: "#021a53" }}
-          >
-            {pageTitle}
+        {screenValue !== 1 && (
+          <Box display="flex" alignItems="center" className="p-4">
+            <IconButton aria-label="goback" onClick={handlePreviousButton}>
+              <ArrowBackIcon fontSize="large" />
+            </IconButton>
+            <Box
+              component="span"
+              className="schedule-title"
+              style={{ fontSize: "22px", fontWeight: 600, color: "#021a53" }}
+            >
+              {pageTitle}
+            </Box>
           </Box>
-        </Box>
+        )}
         {/* <Box ref={tableContainerRef} overflow="scroll" height='100%' display='flex' flexDirection='column'> */}
         <Container maxWidth={screenValue === 1 ? false : "xl"} disableGutters={screenValue === 1}>
           <Box pt={1}>{getCurrentScreen()}</Box>

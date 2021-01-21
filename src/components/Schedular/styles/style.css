@@ -87,4 +87,43 @@ table {
   -webkit-transform: translateX(calc(-50% + 10px)) !important;
           transform: translateX(calc(-50% + 10px)) !important;
 }
+
+.icon-btn-active {
+  -webkit-filter: invert(37%) sepia(89%) saturate(2061%) hue-rotate(2deg) brightness(104%) contrast(105%);
+          filter: invert(37%) sepia(89%) saturate(2061%) hue-rotate(2deg) brightness(104%) contrast(105%);
+}
+
+.icon-btn {
+  cursor: pointer;
+  -webkit-transition: -webkit-transform 0.1s;
+  transition: -webkit-transform 0.1s;
+  transition: transform 0.1s;
+  transition: transform 0.1s, -webkit-transform 0.1s;
+}
+
+.icon-btn:hover {
+  -webkit-transform: scale(1.1);
+          transform: scale(1.1);
+}
+
+.icon-btn:active {
+  -webkit-transform: scale(1.2);
+          transform: scale(1.2);
+}
+
+.timeslot-label {
+  color: #021a53;
+  font-weight: 800;
+  font-size: 15px;
+  height: 32px;
+  width: 196px;
+  border-radius: 36px;
+  -webkit-transition: -webkit-transform 0.2s;
+  transition: -webkit-transform 0.2s;
+  transition: transform 0.2s;
+  transition: transform 0.2s, -webkit-transform 0.2s;
+  position: absolute;
+  top: 0;
+  left: 15px;
+}
 /*# sourceMappingURL=style.css.map */

@@ -66,3 +66,33 @@ table {
 .rc-slider-handle {
   transform: translateX(calc(-50% + 10px)) !important;
 }
+
+.icon-btn-active {
+  filter: invert(37%) sepia(89%) saturate(2061%) hue-rotate(2deg) brightness(104%) contrast(105%);
+}
+
+.icon-btn {
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.icon-btn:hover {
+  transform: scale(1.1);
+}
+
+.icon-btn:active {
+  transform: scale(1.2);
+}
+
+.timeslot-label {
+  color: #021a53;
+  font-weight: 800;
+  font-size: 15px;
+  height: 32px;
+  width: 196px;
+  border-radius: 36px;
+  transition: transform 0.2s;
+  position: absolute;
+  top: 0;
+  left: 15px;
+}

@@ -43,7 +43,7 @@ function convertMinsToHrsMins(minutes) {
 const ReviewAndSave = (props) => {
   const { classes, currentSchedule, scheduleName, scheduleTimezone } = props;
 
-  const days = moment.weekdaysShort();
+  const days = moment.weekdaysShort(true);
   return (
     <Box className={classes.root}>
       <Box>
