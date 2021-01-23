@@ -12,10 +12,14 @@ import {
 /* Range inputs structure:
 <Relative container>
   <Candidate range input>
+
   <Already set timeslots>
     <Many divs that respresent aleready set values>
     <Many transparent input ranges that are above divs and can change timeslots value>
   <Already set timeslots>
+
+  <Range unmerge overlay>
+  
   <New Range Zone>
     <Range input for new timeslots>
     <Outer tooltip zone>

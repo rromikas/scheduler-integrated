@@ -198,37 +198,38 @@ const WeekScheduler = ({
   };
 
   const mergeSelectedRanges = () => {
-    let mergableRanges = selectedItems.filter(
-      (x) => x.split("-")[0] === selectedItems[0].split("-")[0]
-    );
-    if (mergableRanges.length >= 2) {
-      let dayIndex = mergableRanges[0].split("-")[0];
-      let startRangeIndex = mergableRanges[0].split("-")[1];
-      let endRangeIndex = mergableRanges[mergableRanges.length - 1].split("-")[1];
-      console.log(
-        "Start rend rangeafsinde",
-        startRangeIndex,
-        endRangeIndex,
-        dayIndex,
-        currentSchedule
-      );
-      const bounds = [
-        currentSchedule[dayIndex][startRangeIndex].range[0],
-        currentSchedule[dayIndex][endRangeIndex].range[1],
-      ];
+    let groupedByDayRanges = selectedItems.reduce((a, b) => {
+      let key = b.split("-")[0];
+      if (key in a) {
+        a[key].push(b);
+      } else {
+        a[key] = [b];
+      }
+      return a;
+    }, {});
 
-      console.log("bounds", bounds);
+    Object.values(groupedByDayRanges).forEach((r) => {
+      if (r.length >= 2) {
+        let dayIndex = r[0].split("-")[0];
+        let startRangeIndex = r[0].split("-")[1];
+        let endRangeIndex = r[r.length - 1].split("-")[1];
 
-      setSelectedItems([]);
+        const bounds = [
+          currentSchedule[dayIndex][startRangeIndex].range[0],
+          currentSchedule[dayIndex][endRangeIndex].range[1],
+        ];
 
-      let arr = [...currentSchedule[dayIndex]];
-      insertIntoArrayWithSplicingOverlappingItems(arr, bounds, totalMinutes / step);
-      setCurrentSchedule((prev) => {
-        let nestedArr = [...prev];
-        nestedArr[dayIndex] = arr;
-        return nestedArr;
-      });
-    }
+        setSelectedItems([]);
+
+        let arr = [...currentSchedule[dayIndex]];
+        insertIntoArrayWithSplicingOverlappingItems(arr, bounds, totalMinutes / step);
+        setCurrentSchedule((prev) => {
+          let nestedArr = [...prev];
+          nestedArr[dayIndex] = arr;
+          return nestedArr;
+        });
+      }
+    });
   };
 
   useEffect(() => {
