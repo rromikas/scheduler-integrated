@@ -76,17 +76,23 @@ const TimezoneMapGL = (props) => {
 
     const hoveredFeature =
       features && features.find((f) => f.layer.id === "timezone-boundary-builder-fill");
+
     let neTimeZoneFeature;
-    neTimeZoneFeature = features && features.find((f) => f.layer.id === "timezone-fill");
+    if (!hoveredFeature) {
+      neTimeZoneFeature = features && features.find((f) => f.layer.id === "timezone-fill");
+    }
 
     const newState = {};
     let newMapStyle = { ...mapStyle };
-    newState.hoveredFeature = hoveredFeature;
-    newState.neTimeZoneFeature = neTimeZoneFeature;
-
-    newMapStyle["layers"][FIND_NE_FILL_LAYER]["paint"]["fill-opacity"][1][1][2] =
-      neTimeZoneFeature.properties.objectid;
-
+    if (hoveredFeature) {
+      newState.hoveredFeature = hoveredFeature;
+      newState.neTimeZoneFeature = null;
+    } else if (neTimeZoneFeature) {
+      newState.neTimeZoneFeature = neTimeZoneFeature;
+      newState.hoveredFeature = null;
+      newMapStyle["layers"][FIND_NE_FILL_LAYER]["paint"]["fill-opacity"][1][1][2] =
+        neTimeZoneFeature.properties.objectid;
+    }
     setState((prev) =>
       Object.assign({}, prev, {
         lngLat,
@@ -100,7 +106,6 @@ const TimezoneMapGL = (props) => {
 
   const handleClick = (event) => {
     const { onTimezoneClick } = props;
-    console.log("ontimszclic", onTimezoneClick);
     const { hoveredFeature } = state;
     const tzid = hoveredFeature && hoveredFeature.properties && hoveredFeature.properties.tzid;
 
@@ -160,7 +165,7 @@ const TimezoneMapGL = (props) => {
     );
   };
 
-  const renderSelectTimezone = () => {
+  const renderSelectOrHoveredTimezone = () => {
     const { source, timezone } = props;
     const { viewport, hoveredFeature, lngLat } = state;
 
@@ -232,7 +237,7 @@ const TimezoneMapGL = (props) => {
         >
           {renderTooltip()}
           {renderNeTooltip()}
-          {renderSelectTimezone()}
+          {renderSelectOrHoveredTimezone()}
           <NavigationControlWrapper>
             <NavigationControl onViewportChange={updateViewport} />
           </NavigationControlWrapper>
