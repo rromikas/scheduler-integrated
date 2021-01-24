@@ -12,7 +12,7 @@ import TimezoneSelectorMap from "components/TimezoneSelectorMap";
 import ReviewAndSave from "components/ReviewAndSave";
 import ScheduleThumbnail from "components/ScheduleThumbnail";
 import { v4 as uuidv4 } from "uuid";
-import settings from "components/Schedular/settings";
+import settings from "components/Schedular/config";
 import ConfirmDialog from "components/ConfirmDialog";
 import { createConfirmation } from "react-confirm";
 

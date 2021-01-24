@@ -3,6 +3,13 @@ let initialDistance;
 let center;
 
 export const onTouchStart = (e) => {
+  let pageX = e.touches[0].pageX;
+  console.log("epageX", pageX);
+  if (!(pageX > 10 && pageX < window.innerWidth - 10)) {
+    // prevent swipe to navigate gesture
+    e.preventDefault();
+  }
+
   if (e.touches.length >= 2) {
     e.preventDefault();
     lastDistance = Math.hypot(

@@ -72,7 +72,7 @@ const DayTimeline = ({
       : size.width - tooltipWidth;
 
   const baseTrackStyle = {
-    backgroundColor: "rgba(45,45,97,0.7)",
+    backgroundColor: "rgba(45,45,97,0.5)",
     borderRadius: 0,
     height: "72px",
     cursor: "grab",
@@ -440,7 +440,9 @@ const DayTimeline = ({
           e.stopPropagation();
           if (activeButton === "unmerge") {
             const { x, rangeIndex } = parseMouseEvent(e);
-            unmergeAtPoint(x, rangeIndex);
+            if (rangeIndex >= 0) {
+              unmergeAtPoint(x, rangeIndex);
+            }
           }
         }}
         style={unmergeLayerStyle}

@@ -3,7 +3,7 @@ import DayTimeline from "./DayTimeline";
 import "bootstrap/dist/css/bootstrap.css";
 import "./styles/style.css";
 import moment from "moment";
-import settings from "./settings";
+import settings from "./config";
 import FormButton from "components/FormButton";
 import GetMouseUser from "./scripts/getMouseUserOnWheel";
 import { onTouchStart, onTouchEnd, onTouchMove } from "./scripts/touchEventsHandlers";

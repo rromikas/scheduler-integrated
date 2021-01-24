@@ -62,7 +62,7 @@ const ActionsPanel = ({
       ) : (
         <div className="mr-3">
           <img
-            onClick={() => setActiveButton("unmerge")}
+            onClick={() => setActiveButton(activeButton === "unmerge" ? "" : "unmerge")}
             className={`icon-btn ${activeButton === "unmerge" ? "icon-btn-active" : ""}`}
             src={UnmergeIcon}
           ></img>
