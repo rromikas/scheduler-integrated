@@ -19,6 +19,7 @@
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.31",
     "node-fetch": "^2.6.1",
+    "polished": "^4.1.0",
     "rc-slider": "^9.7.1",
     "react": "^16.14.0",
     "react-confirm": "^0.1.20",

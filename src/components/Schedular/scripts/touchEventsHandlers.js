@@ -4,9 +4,8 @@ let center;
 
 export const onTouchStart = (e) => {
   let pageX = e.touches[0].pageX;
-  console.log("epageX", pageX);
+  // prevent swipe to navigate gesture
   if (!(pageX > 10 && pageX < window.innerWidth - 10)) {
-    // prevent swipe to navigate gesture
     e.preventDefault();
   }
 

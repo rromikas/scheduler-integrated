@@ -167,7 +167,7 @@ const TimezoneMapGL = (props) => {
 
   const renderSelectOrHoveredTimezone = () => {
     const { source, timezone } = props;
-    const { viewport, hoveredFeature, lngLat } = state;
+    const { viewport, hoveredFeature, lngLat, neTimeZoneFeature } = state;
 
     const layers = [];
     if (timezone && Info.isValidIANAZone(timezone)) {
@@ -218,7 +218,8 @@ const TimezoneMapGL = (props) => {
     return <DeckGL {...viewport} layers={layers} />;
   };
 
-  const { mapboxApiAccessToken } = props;
+  const mapboxApiAccessToken = props.mapboxApiAccessToken;
+
   const { mapStyle, viewport } = state;
 
   return (
@@ -274,6 +275,8 @@ export default compose(
   withSource,
   defaultProps({
     defaultMapStyle: MAP_STYLE,
+    mapboxApiAccessToken:
+      "pk.eyJ1Ijoicm9taWthcyIsImEiOiJjazg0b2ZrOWcwc25mM29xdHFlMHdwenpsIn0.EpdSDBQASiP_K00nvaMMRA",
   }),
   withProps(({ source, defaultMapStyle }) => {
     let finalDefaultMapStyle = defaultMapStyle;

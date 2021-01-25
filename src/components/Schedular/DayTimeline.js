@@ -8,6 +8,8 @@ import {
   convertMinsToHrsMins,
   insertIntoArrayWithSplicingOverlappingItems,
 } from "./scripts/helpers";
+import { withTheme } from "styled-components";
+import { transparentize } from "polished";
 
 /* Range inputs structure:
 <Relative container>
@@ -50,6 +52,7 @@ const DayTimeline = ({
   hourFormat,
   activeButton,
   setActiveButton,
+  theme,
 }) => {
   const [active, setActive] = useState(-2); // which range of the day mouse is currently over.
   const [newRange, setNewRange] = useState([]);
@@ -72,7 +75,6 @@ const DayTimeline = ({
       : size.width - tooltipWidth;
 
   const baseTrackStyle = {
-    backgroundColor: "rgba(45,45,97,0.5)",
     borderRadius: 0,
     height: "72px",
     cursor: "grab",
@@ -96,7 +98,7 @@ const DayTimeline = ({
       width: rangeStepWidth,
       backgroundPosition: "center",
       zIndex: 2,
-      backgroundColor: "rgba(255,94,9,0.2)",
+      backgroundColor: transparentize(0.8, theme.secondary),
       opacity: !dragging
         ? showLines
           ? activeState === -2
@@ -126,7 +128,7 @@ const DayTimeline = ({
     padding: "6px",
     left: rangeStepWidth * newRange[0],
     height: cellHeight,
-    background: "#FF5E00",
+    background: theme.secondary,
     width: newRangeWidth,
     pointerEvents: "none",
   };
@@ -139,8 +141,11 @@ const DayTimeline = ({
       zIndex: isSelected ? 45 : 20,
       left: rangeStepWidth * (element.range[0] / element.from) * maxValue,
       width: ((rangeStepWidth * (element.range[1] - element.range[0])) / element.from) * maxValue,
-      background: "#021A53",
-      border: isSelected || active === index ? "3px solid #FF5E00" : "3px solid #021A53",
+      background: theme.primary,
+      border:
+        isSelected || active === index
+          ? `3px solid ${theme.secondary}`
+          : `3px solid ${theme.primary}`,
     };
   };
 
@@ -156,7 +161,7 @@ const DayTimeline = ({
   const timeslotLabelStyle = (isSelected) => {
     return {
       transform: isSelected ? `translateY(-16px)` : `translateY(${(cellHeight - 38) / 2}px)`,
-      background: isSelected ? "#FF5E00" : "#E3FFF8",
+      background: isSelected ? theme.secondary : theme.tertiary,
     };
   };
 
@@ -334,7 +339,7 @@ const DayTimeline = ({
         padding: "4px 20px",
         width: tooltipWidth,
         borderRadius: "29px",
-        background: "#021A53",
+        background: theme.primary,
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -347,7 +352,7 @@ const DayTimeline = ({
           {convertMinsToHrsMins((newRange[0] / maxValue) * totalMinutes, hourFormat === 12)}
         </div>
       </div>
-      <div style={{ color: "#FF5E00" }}>
+      <div style={{ color: theme.secondary }}>
         <div style={{ fontSize: "15px", lineHeight: "15px" }}>{dayName}</div>
         <div style={{ fontSize: "25px", lineHeight: "25px" }}>
           {convertMinsToHrsMins((newRange[1] / maxValue) * totalMinutes, hourFormat === 12)}
@@ -380,7 +385,11 @@ const DayTimeline = ({
           step={1}
           max={maxValue}
           min={0}
-          trackStyle={[baseTrackStyle]}
+          trackStyle={[
+            Object.assign({}, baseTrackStyle, {
+              backgroundColor: transparentize(0.5, theme.primary),
+            }),
+          ]}
           handleStyle={[{ opacity: 0 }, { opacity: 0 }]}
           railStyle={{ opacity: 0 }}
         ></Range>
@@ -509,4 +518,4 @@ const DayTimeline = ({
   );
 };
 
-export default DayTimeline;
+export default withTheme(DayTimeline);

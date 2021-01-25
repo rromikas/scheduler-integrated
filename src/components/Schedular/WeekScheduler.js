@@ -72,6 +72,7 @@ const WeekScheduler = ({
 
   const scrollableContainer = useRef(null);
   const zoomableContainer = useRef(null);
+  const checkIfDraggingiIntervalRef = useRef(null);
 
   const zooming = useRef(false);
   const [zoomOption, setZoomOption] = useState(1);
@@ -82,8 +83,10 @@ const WeekScheduler = ({
   const { cellWidth, interval, step } = zoomOptions[zoomOption];
   const size = (totalMinutes / interval) * cellWidth;
 
-  const [scrollRightSpeed, setScrollRightSpeed] = useState(0);
-  const [scrollLeftSpeed, setScrollLeftSpeed] = useState(0);
+  const [allowScrollRight, setAllowScrollRight] = useState(false);
+  const [allowScrollLeft, setAllowScrollLeft] = useState(false);
+  const leftSpeed = useRef(0);
+  const rightSpeed = useRef(0);
 
   const [allowZoom, setAllowZoom] = useState(false);
   const pageRef = useRef(null);
@@ -97,9 +100,9 @@ const WeekScheduler = ({
 
   useEffect(() => {
     let interval;
-    if (scrollRightSpeed) {
+    if (allowScrollRight) {
       interval = setInterval(() => {
-        scrollableContainer.current.scrollLeft += scrollRightSpeed;
+        scrollableContainer.current.scrollLeft += rightSpeed.current;
       }, 2);
     } else {
       clearInterval(interval);
@@ -107,13 +110,13 @@ const WeekScheduler = ({
     return () => {
       clearInterval(interval);
     };
-  }, [scrollRightSpeed]);
+  }, [allowScrollRight]);
 
   useEffect(() => {
     let interval;
-    if (scrollLeftSpeed) {
+    if (allowScrollLeft) {
       interval = setInterval(() => {
-        scrollableContainer.current.scrollLeft -= scrollLeftSpeed;
+        scrollableContainer.current.scrollLeft -= leftSpeed.current;
       }, 2);
     } else {
       clearInterval(interval);
@@ -121,7 +124,39 @@ const WeekScheduler = ({
     return () => {
       clearInterval(interval);
     };
-  }, [scrollLeftSpeed]);
+  }, [allowScrollLeft]);
+
+  const setScrollBehaviour = (e) => {
+    if (dragging) {
+      const bounds = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - bounds.left;
+      const maxScroll =
+        scrollableContainer.current.scrollWidth - scrollableContainer.current.clientWidth;
+      const currentScrollLeft = scrollableContainer.current.scrollLeft;
+      //prevent scrolling when user draw timeslot starting from schedular edge
+      if (maxScroll !== currentScrollLeft) {
+        if (e.currentTarget.offsetWidth - x < 120) {
+          setAllowScrollRight(true);
+          rightSpeed.current = 2 + (120 - (e.currentTarget.offsetWidth - x)) / 40;
+        } else {
+          setAllowScrollRight(false);
+        }
+      }
+
+      //prevent scrolling when user draw timeslot starting from schedular edge
+      if (currentScrollLeft !== 0) {
+        if (x < 120) {
+          setAllowScrollLeft(true);
+          leftSpeed.current = 2 + (120 - x) / 45;
+        } else {
+          setAllowScrollLeft(false);
+        }
+      }
+    } else {
+      setAllowScrollRight(false);
+      setAllowScrollLeft(false);
+    }
+  };
 
   const onZoom = (targetX, direction) => {
     if (!zooming.current) {
@@ -233,7 +268,11 @@ const WeekScheduler = ({
   };
 
   useEffect(() => {
-    const mouseup = () => setDragging(false);
+    const mouseup = () => {
+      setDragging(false);
+      setAllowScrollLeft(false);
+      setAllowScrollRight(false);
+    };
     window.addEventListener("mouseup", mouseup);
     return () => {
       window.removeEventListener("mouseup", mouseup);
@@ -249,8 +288,17 @@ const WeekScheduler = ({
     const keyup = () => {
       setAllowZoom(false);
     };
+
     const mouseenter = () => {
-      pageRef.current.focus({ preventScroll: true });
+      if (checkIfDraggingiIntervalRef.current) {
+        clearInterval(checkIfDraggingiIntervalRef.current);
+      }
+      checkIfDraggingiIntervalRef.current = setInterval(() => {
+        if (!dragging) {
+          clearInterval(checkIfDraggingiIntervalRef.current);
+          pageRef.current.focus({ preventScroll: true });
+        }
+      }, 100);
     };
     const mouseleave = () => {
       pageRef.current.blur();
@@ -266,8 +314,9 @@ const WeekScheduler = ({
       pageRef.current.removeEventListener("mouseleave", mouseleave);
       pageRef.current.removeEventListener("keydown", keydown);
       pageRef.current.removeEventListener("keyup", keyup);
+      clearInterval(checkIfDraggingiIntervalRef.current);
     };
-  }, []);
+  }, [dragging]);
 
   useEffect(() => {
     const zoomOnWheel = (e) => {
@@ -395,47 +444,7 @@ const WeekScheduler = ({
                 <div
                   style={{ minWidth: "0px" }}
                   className="flex-grow-1"
-                  onMouseLeave={() => {
-                    setScrollLeftSpeed(0);
-                    setScrollRightSpeed(0);
-                  }}
-                  onMouseMove={(e) => {
-                    if (dragging) {
-                      const bounds = e.currentTarget.getBoundingClientRect();
-                      const x = e.clientX - bounds.left;
-                      const maxScroll =
-                        scrollableContainer.current.scrollWidth -
-                        scrollableContainer.current.clientWidth;
-                      const currentScrollLeft = scrollableContainer.current.scrollLeft;
-                      //prevent scrolling when user draw timeslot starting from schedular edge
-                      if (maxScroll !== currentScrollLeft) {
-                        if (e.currentTarget.offsetWidth - x < 120) {
-                          if (e.currentTarget.offsetWidth - x < 50) {
-                            setScrollRightSpeed(2);
-                          } else {
-                            setScrollRightSpeed(1.5);
-                          }
-                        } else {
-                          setScrollRightSpeed(0);
-                        }
-                      }
-
-                      if (currentScrollLeft !== 0) {
-                        if (x < 120) {
-                          if (x < 50) {
-                            setScrollLeftSpeed(1.8);
-                          } else {
-                            setScrollLeftSpeed(1.3);
-                          }
-                        } else {
-                          setScrollLeftSpeed(0);
-                        }
-                      }
-                    } else {
-                      setScrollRightSpeed(0);
-                      setScrollLeftSpeed(0);
-                    }
-                  }}
+                  onMouseMove={setScrollBehaviour}
                 >
                   <div
                     ref={scrollableContainer}
@@ -540,7 +549,6 @@ const WeekScheduler = ({
                             setSelectedItems((prev) => prev.filter((_, i) => i < 0));
                           }
                         }}
-                        onMouseUp={() => setDragging(false)}
                         onMouseDown={() => setDragging(true)}
                         ref={zoomableContainer}
                         style={{
