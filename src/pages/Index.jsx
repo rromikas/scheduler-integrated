@@ -91,15 +91,16 @@ const Index = (props) => {
           setWeekStart={setWeekStart}
         />
       );
-    } else if (screenValue === 2) {
-      return (
-        <ReviewAndSave
-          scheduleName={scheduleName}
-          currentSchedule={currentSchedule}
-          scheduleTimezone={scheduleTimezone}
-        />
-      );
     }
+    // } else if (screenValue === 2) {
+    //   return (
+    //     <ReviewAndSave
+    //       scheduleName={scheduleName}
+    //       currentSchedule={currentSchedule}
+    //       scheduleTimezone={scheduleTimezone}
+    //     />
+    //   );
+    // }
   };
 
   const handleNextButton = () => {
@@ -251,14 +252,12 @@ const Index = (props) => {
             </Box>
           </Box>
         )}
-        {/* <Box ref={tableContainerRef} overflow="scroll" height='100%' display='flex' flexDirection='column'> */}
         <Container maxWidth={screenValue === 1 ? false : "xl"} disableGutters={screenValue === 1}>
           <Box pt={1}>{getCurrentScreen()}</Box>
           <Box ml={screenValue === 1 ? 3 : 0} pb={2} mt={3}>
             <FormButton onClick={handleNextButton}>{buttonText}</FormButton>
           </Box>
         </Container>
-        {/* </Box> */}
       </Drawer>
     </>
   );

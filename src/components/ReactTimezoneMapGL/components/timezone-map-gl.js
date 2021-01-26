@@ -49,12 +49,13 @@ const TimezoneMapGL = (props) => {
       zoom: 1,
       bearing: 0,
       pitch: 0,
-      ...props.defaultViewport,
     },
   });
 
   useEffect(() => {
-    setState((prev) => Object.assign({}, prev, { mapStyle: props.defaultMapStyle }));
+    setState((prev) =>
+      Object.assign({}, prev, { mapStyle: props.defaultMapStyle, viewport: props.defaultViewport })
+    );
   }, [props]);
 
   const updateViewport = (viewport) => {
@@ -224,28 +225,24 @@ const TimezoneMapGL = (props) => {
 
   return (
     <div onClick={handleClick} onMouseOut={handleMouseOut}>
-      {mapStyle ? (
-        <MapGL
-          {...viewport}
-          minZoom={1}
-          maxZoom={6}
-          mapStyle={mapStyle}
-          onHover={handleHover}
-          onViewportChange={updateViewport}
-          mapboxApiAccessToken={mapboxApiAccessToken}
-          doubleClickZoom={false}
-          // scrollZoom={false}
-        >
-          {renderTooltip()}
-          {renderNeTooltip()}
-          {renderSelectOrHoveredTimezone()}
-          <NavigationControlWrapper>
-            <NavigationControl onViewportChange={updateViewport} />
-          </NavigationControlWrapper>
-        </MapGL>
-      ) : (
-        ""
-      )}
+      <MapGL
+        {...viewport}
+        minZoom={1}
+        maxZoom={6}
+        mapStyle={mapStyle}
+        onHover={handleHover}
+        onViewportChange={updateViewport}
+        mapboxApiAccessToken={mapboxApiAccessToken}
+        doubleClickZoom={false}
+        // scrollZoom={false}
+      >
+        {renderTooltip()}
+        {renderNeTooltip()}
+        {renderSelectOrHoveredTimezone()}
+        <NavigationControlWrapper>
+          <NavigationControl onViewportChange={updateViewport} />
+        </NavigationControlWrapper>
+      </MapGL>
     </div>
   );
 };

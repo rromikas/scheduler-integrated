@@ -271,7 +271,6 @@ const DayTimeline = ({
       }
     },
     mainOnAfterChange: (val, x, i) => {
-      console.log(val[1] - val[0] !== x.range[1] - x.range[0]);
       pageRef.current.focus({ preventScroll: true }); // this is necesary for zooming funcionality, page ref has keydown listener.
       if (val[0] === val[1]) {
         removeRange(i);

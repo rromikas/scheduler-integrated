@@ -1,31 +1,31 @@
 /* global process */
-import React from 'react';
-import PropTypes from 'prop-types';
-import { Paper, Box, Typography } from '@material-ui/core';
-import { withStyles } from '@material-ui/core/styles';
-import { SizeMe } from 'react-sizeme';
-import TextField from '@material-ui/core/TextField';
-import TimezoneMapGL, { Provider } from './ReactTimezoneMapGL';
-import timezoneTopo from './ReactTimezoneMapGL/data/timezoneTopo.json';
+import React from "react";
+import PropTypes from "prop-types";
+import { Paper, Box, Typography } from "@material-ui/core";
+import { withStyles } from "@material-ui/core/styles";
+import { SizeMe } from "react-sizeme";
+import TextField from "@material-ui/core/TextField";
+import TimezoneMapGL, { Provider } from "./ReactTimezoneMapGL";
+import timezoneTopo from "./ReactTimezoneMapGL/data/timezoneTopo.json";
 
-import 'mapbox-gl/dist/mapbox-gl.css';
+import "mapbox-gl/dist/mapbox-gl.css";
 
-const styles = theme => ({
+const styles = (theme) => ({
   root: {
-    width: '80%',
+    width: "80%",
   },
   heading: {
-    color: '#2d2d61',
+    color: "#2d2d61",
     fontSize: 22,
   },
   paper: {
-    margin: 'auto',
+    margin: "auto",
     marginTop: theme.spacing(1),
-    width: '100%',
+    width: "100%",
     borderRadius: 4,
   },
   name: {
-    marginBottom: '10px',
+    marginBottom: "10px",
     fontSize: 100,
   },
 });
@@ -46,7 +46,7 @@ class TimezoneSelectorMap extends React.Component {
     this.props.setTimezone(this.state.selectTimezone);
   }
 
-  handleChange = value => this.setState({ selectTimezone: value });
+  handleChange = (value) => this.setState({ selectTimezone: value });
 
   handleTimezoneClick = (event, timezoneName) => {
     this.setState({
@@ -57,7 +57,7 @@ class TimezoneSelectorMap extends React.Component {
     });
   };
 
-  handleNameChange = e => {
+  handleNameChange = (e) => {
     this.setState({
       name: e.target.value,
     });
@@ -68,42 +68,44 @@ class TimezoneSelectorMap extends React.Component {
     const { selectTimezone } = this.state;
 
     return (
-      <Box className={classes.root}>
-        <Box>
-          <TextField
-            id='schedule-name'
-            label='Name'
-            type='text'
-            variant='outlined'
-            fullWidth
-            value={this.state.name}
-            className={classes.name}
-            onChange={this.handleNameChange}
-          />
-          {/* <TimezoneSelect value={selectTimezone} onChange={this.handleChange} /> */}
-          <Box mt={2}>
-            <Typography className={classes.heading}>Select Timezone</Typography>
-          </Box>
-          <Paper className={classes.paper}>
-            <Provider value={timezoneTopo}>
-              <SizeMe>
-                {({ size }) => (
-                  <TimezoneMapGL
-                    timezone={selectTimezone?.value}
-                    mapboxApiAccessToken={MAPBOX_TOKEN}
-                    onTimezoneClick={this.handleTimezoneClick}
-                    defaultViewport={{
-                      width: size.width,
-                      height: size.width * 0.45 < 500 ? 500 : size.width * 0.45,
-                      zoom: 1.8,
-                    }}
-                  />
-                )}
-              </SizeMe>
-            </Provider>
-          </Paper>
-        </Box>
-      </Box>
+      <SizeMe>
+        {({ size }) => {
+          return (
+            <Box className={classes.root}>
+              <Box>
+                <TextField
+                  id="schedule-name"
+                  label="Name"
+                  type="text"
+                  variant="outlined"
+                  fullWidth
+                  value={this.state.name}
+                  className={classes.name}
+                  onChange={this.handleNameChange}
+                />
+                {/* <TimezoneSelect value={selectTimezone} onChange={this.handleChange} /> */}
+                <Box mt={2}>
+                  <Typography className={classes.heading}>Select Timezone</Typography>
+                </Box>
+                <Paper className={classes.paper}>
+                  <Provider value={timezoneTopo}>
+                    <TimezoneMapGL
+                      timezone={selectTimezone?.value}
+                      mapboxApiAccessToken={MAPBOX_TOKEN}
+                      onTimezoneClick={this.handleTimezoneClick}
+                      defaultViewport={{
+                        width: size.width,
+                        height: size.width * 0.45 < 500 ? 500 : size.width * 0.45,
+                        zoom: 1.8,
+                      }}
+                    />
+                  </Provider>
+                </Paper>
+              </Box>
+            </Box>
+          );
+        }}
+      </SizeMe>
     );
   }
 }
