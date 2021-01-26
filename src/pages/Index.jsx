@@ -44,14 +44,9 @@ const screens = [
     screenName: "timezoneScreen",
   },
   {
-    buttonText: "Next",
+    buttonText: "Save",
     pageTitle: "Create Schedule",
     screenName: "scheduleScreen",
-  },
-  {
-    buttonText: "Save",
-    pageTitle: "Review and save",
-    screenName: "reviewScreen",
   },
 ];
 

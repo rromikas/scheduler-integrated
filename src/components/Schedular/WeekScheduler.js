@@ -64,11 +64,11 @@ const WeekScheduler = ({
     cellHeight,
     showLines,
     timeGapBetweenZooms,
-    zoomOnWheel,
+    defaultHourFormat,
   } = settings;
 
   const [activeButton, setActiveButton] = useState(""); //which button is currently active
-  const [hourFormat, setHourFormat] = useState(12);
+  const [hourFormat, setHourFormat] = useState(defaultHourFormat);
 
   const scrollableContainer = useRef(null);
   const zoomableContainer = useRef(null);

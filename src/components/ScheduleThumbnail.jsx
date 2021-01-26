@@ -156,7 +156,7 @@ const ScheduleThumbnail = (props) => {
                           trackStyle={[
                             {
                               borderRadius: "30px",
-                              backgroundColor: "rgb(3, 17, 66)",
+                              backgroundColor: row % 2 === 0 ? "#021A53" : "#FF5E00",
                               height: "19px",
                               cursor: "default",
                             },

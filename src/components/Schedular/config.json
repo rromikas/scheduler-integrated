@@ -9,5 +9,6 @@
   ],
   "timeGapBetweenZooms": 80,
   "cellHeight": 72,
-  "totalMinutes": 1440
+  "totalMinutes": 1440,
+  "defaultHourFormat": 24
 }
