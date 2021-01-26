@@ -6,7 +6,12 @@ import moment from "moment";
 import settings from "./config";
 import FormButton from "components/FormButton";
 import GetMouseUser from "./scripts/getMouseUserOnWheel";
-import { onTouchStart, onTouchEnd, onTouchMove } from "./scripts/touchEventsHandlers";
+import {
+  onTouchStart,
+  onTouchEnd,
+  onTouchMove,
+  preventGoBack,
+} from "./scripts/touchEventsHandlers";
 import { Box, IconButton } from "@material-ui/core";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import ActionsPanel from "./ActionsPanel";
@@ -274,8 +279,10 @@ const WeekScheduler = ({
       setAllowScrollRight(false);
     };
     window.addEventListener("mouseup", mouseup);
+    window.addEventListener("touchstart", preventGoBack);
     return () => {
       window.removeEventListener("mouseup", mouseup);
+      window.removeEventListener("touchstart", preventGoBack);
     };
   }, []);
 

@@ -22,13 +22,21 @@
   font-weight: 700;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   font-family: "Poppins" !important;
   background-color: #efefef !important;
+  overflow: hidden;
 }
 
 .App {
   text-align: center;
+  height: 100%;
 }
 
 .App-logo {

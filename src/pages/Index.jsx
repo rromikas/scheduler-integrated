@@ -92,15 +92,6 @@ const Index = (props) => {
         />
       );
     }
-    // } else if (screenValue === 2) {
-    //   return (
-    //     <ReviewAndSave
-    //       scheduleName={scheduleName}
-    //       currentSchedule={currentSchedule}
-    //       scheduleTimezone={scheduleTimezone}
-    //     />
-    //   );
-    // }
   };
 
   const handleNextButton = () => {
@@ -239,7 +230,7 @@ const Index = (props) => {
         onClose={() => toggleDrawer(false)}
       >
         {screenValue !== 1 && (
-          <Box display="flex" alignItems="center" className="p-4">
+          <Box display="flex" alignItems="center" className="p-4 position-relative">
             <IconButton aria-label="goback" onClick={handlePreviousButton}>
               <ArrowBackIcon fontSize="large" />
             </IconButton>

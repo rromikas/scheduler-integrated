@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { compose, withProps, defaultProps } from "recompose";
@@ -46,17 +46,32 @@ const TimezoneMapGL = (props) => {
       height: 750,
       latitude: 0,
       longitude: 0,
-      zoom: 1,
+      zoom: 1.8,
       bearing: 0,
       pitch: 0,
     },
   });
 
+  const { defaultMapStyle, defaultViewport } = props;
+
   useEffect(() => {
     setState((prev) =>
-      Object.assign({}, prev, { mapStyle: props.defaultMapStyle, viewport: props.defaultViewport })
+      Object.assign({}, prev, {
+        mapStyle: defaultMapStyle,
+      })
     );
-  }, [props]);
+  }, [defaultMapStyle]);
+
+  useEffect(() => {
+    let newViewport = { ...state.viewport };
+    newViewport.width = defaultViewport.width;
+    newViewport.height = defaultViewport.height;
+    setState((prev) =>
+      Object.assign({}, prev, {
+        viewport: newViewport,
+      })
+    );
+  }, [defaultViewport]);
 
   const updateViewport = (viewport) => {
     setState((prev) => Object.assign({}, prev, { viewport }));
