@@ -9,7 +9,7 @@ function App() {
   const app = useRef(null);
   useEffect(() => {
     const preventGoBack = (e) => {
-      if (e.pageX > 50) {
+      if (!e.pageX || e.pageX > 50) {
         return;
       }
       e.preventDefault();
