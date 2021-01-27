@@ -1,14 +1,11 @@
 import React, { useEffect, useState, useRef, Suspense } from "react";
 import fetch from "node-fetch";
-
 import { Container, Grid, Box, Typography, IconButton } from "@material-ui/core";
 import { withStyles } from "@material-ui/core/styles";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
-
 import Schedular from "components/Schedular";
 import FormButton from "components/FormButton";
 import OutlinedButton from "components/OutlinedButton";
-
 import ScheduleThumbnail from "components/ScheduleThumbnail";
 import { v4 as uuidv4 } from "uuid";
 import settings from "components/Schedular/config";
@@ -54,11 +51,10 @@ const screens = [
 
 const Index = (props) => {
   const [state, setState] = useState({ drawerOpen: false, drawerRemoveFinished: true });
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [screenValue, setScreenValue] = useState(0);
   const [pageTitle, setPageTitle] = useState(screens[0].pageTitle);
   const [buttonText, setButtonText] = useState(screens[0].buttonText);
-  const [scheduleName, setScheduleName] = useState(null);
+  const [scheduleName, setScheduleName] = useState("");
   const [scheduleTimezone, setTimezone] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [currentSchedule, setCurrentSchedule] = useState(new Array(7).fill([]));
@@ -70,6 +66,12 @@ const Index = (props) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) return;
 
     setState({ drawerOpen: open, drawerRemoveFinished: false });
+  };
+
+  const closeDrawer = async () => {
+    setState((prev) => Object.assign({}, prev, { drawerOpen: false }));
+    await delay(400);
+    setState((prev) => Object.assign({}, prev, { drawerRemoveFinished: true }));
   };
 
   const getCurrentScreen = () => {
@@ -98,7 +100,7 @@ const Index = (props) => {
     }
   };
 
-  const handleNextButton = () => {
+  const handleNextButton = async () => {
     if (buttonText === "Save") {
       let finalSchedule = {
         schedule_id: scheduleId,
@@ -107,16 +109,22 @@ const Index = (props) => {
         timezone: scheduleTimezone,
       };
 
-      setSchedules((previousSchedules) => [
-        ...previousSchedules.filter(
-          (schedule) => schedule.schedule_id !== finalSchedule.schedule_id
-        ),
-        finalSchedule,
-      ]);
+      let existingScheduleIndex = schedules.findIndex(
+        (x) => x.schedule_id === finalSchedule.schedule_id
+      );
+      if (existingScheduleIndex > -1) {
+        setSchedules((prev) => {
+          let arr = [...prev];
+          arr[existingScheduleIndex] = finalSchedule;
+          return arr;
+        });
+      } else {
+        setSchedules((prev) => prev.concat([finalSchedule]));
+      }
 
       const jsonSchedule = generateJSON(finalSchedule);
 
-      console.log("JSON schedule: ", jsonSchedule);
+      console.log("schedule JSON: ", jsonSchedule);
 
       fetch("https://google.com", {
         method: "POST",
@@ -124,8 +132,8 @@ const Index = (props) => {
         body: JSON.stringify(jsonSchedule),
       });
 
+      await closeDrawer();
       resetState();
-      setState({ drawerOpen: false });
     }
 
     if (screenValue < screens.length - 1) setScreenValue((previousValue) => previousValue + 1);
@@ -163,9 +171,7 @@ const Index = (props) => {
     if (screenValue > 0) setScreenValue((previousValue) => previousValue - 1);
     if (screenValue === 0) {
       resetState();
-      setState((prev) => Object.assign({}, prev, { drawerOpen: false }));
-      await delay(400);
-      setState((prev) => Object.assign({}, prev, { drawerRemoveFinished: true }));
+      closeDrawer();
     }
   };
 
@@ -180,7 +186,7 @@ const Index = (props) => {
     setScheduleId(theSchedule.schedule_id);
     setScheduleName(theSchedule.name);
     setTimezone(theSchedule.timezone);
-    setState({ drawerOpen: true });
+    setState((prev) => Object.assign({}, prev, { drawerOpen: true, drawerRemoveFinished: false }));
   };
 
   const handleDeleteClick = (schedule_id) => {

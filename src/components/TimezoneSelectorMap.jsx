@@ -42,7 +42,9 @@ class TimezoneSelectorMap extends React.Component {
   };
 
   componentWillUnmount() {
-    this.props.setScheduleName(this.state.name);
+    if (this.state.name) {
+      this.props.setScheduleName(this.state.name);
+    }
     this.props.setTimezone(this.state.selectTimezone);
   }
 
