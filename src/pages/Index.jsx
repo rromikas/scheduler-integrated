@@ -1,20 +1,22 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, Suspense } from "react";
 import fetch from "node-fetch";
 
-import { Drawer, Container, Grid, Box, Typography, IconButton } from "@material-ui/core";
+import { Container, Grid, Box, Typography, IconButton } from "@material-ui/core";
 import { withStyles } from "@material-ui/core/styles";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 
 import Schedular from "components/Schedular";
 import FormButton from "components/FormButton";
 import OutlinedButton from "components/OutlinedButton";
-import TimezoneSelectorMap from "components/TimezoneSelectorMap";
-import ReviewAndSave from "components/ReviewAndSave";
+
 import ScheduleThumbnail from "components/ScheduleThumbnail";
 import { v4 as uuidv4 } from "uuid";
 import settings from "components/Schedular/config";
 import ConfirmDialog from "components/ConfirmDialog";
 import { createConfirmation } from "react-confirm";
+import CustomDrawer from "components/CustomDrawer";
+
+const TimezoneSelectorMap = React.lazy(() => import("components/TimezoneSelectorMap"));
 
 const confirm = createConfirmation(ConfirmDialog);
 
@@ -51,7 +53,7 @@ const screens = [
 ];
 
 const Index = (props) => {
-  const [state, setState] = useState({ drawerOpen: false });
+  const [state, setState] = useState({ drawerOpen: false, drawerRemoveFinished: true });
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [screenValue, setScreenValue] = useState(0);
   const [pageTitle, setPageTitle] = useState(screens[0].pageTitle);
@@ -67,18 +69,20 @@ const Index = (props) => {
   const toggleDrawer = (open) => (event) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) return;
 
-    setState({ drawerOpen: open });
+    setState({ drawerOpen: open, drawerRemoveFinished: false });
   };
 
   const getCurrentScreen = () => {
     if (screenValue === 0) {
       return (
-        <TimezoneSelectorMap
-          scheduleName={scheduleName}
-          setScheduleName={setScheduleName}
-          setTimezone={setTimezone}
-          scheduleTimezone={scheduleTimezone}
-        />
+        <Suspense fallback={<div></div>}>
+          <TimezoneSelectorMap
+            scheduleName={scheduleName}
+            setScheduleName={setScheduleName}
+            setTimezone={setTimezone}
+            scheduleTimezone={scheduleTimezone}
+          />
+        </Suspense>
       );
     } else if (screenValue === 1) {
       return (
@@ -151,11 +155,17 @@ const Index = (props) => {
     setScreenValue(0);
   };
 
-  const handlePreviousButton = () => {
+  const delay = (ms) => {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  };
+
+  const handlePreviousButton = async () => {
     if (screenValue > 0) setScreenValue((previousValue) => previousValue - 1);
     if (screenValue === 0) {
       resetState();
-      setState({ drawerOpen: false });
+      setState((prev) => Object.assign({}, prev, { drawerOpen: false }));
+      await delay(400);
+      setState((prev) => Object.assign({}, prev, { drawerRemoveFinished: true }));
     }
   };
 
@@ -180,7 +190,13 @@ const Index = (props) => {
 
   return (
     <>
-      <Container style={{ backgroundColor: "#efefef" }} maxWidth="xl">
+      <Container
+        style={{
+          backgroundColor: "#efefef",
+          position: !state.drawerRemoveFinished ? "absolute" : "relative",
+        }}
+        maxWidth="xl"
+      >
         <Box pt={3}>
           <Box display="flex" justifyContent="space-between">
             <Box>
@@ -221,14 +237,7 @@ const Index = (props) => {
           </Grid>
         </Box>
       </Container>
-      <Drawer
-        classes={{
-          paper: props.classes.drawerPaper,
-        }}
-        anchor={"right"}
-        open={state.drawerOpen}
-        onClose={() => toggleDrawer(false)}
-      >
+      <CustomDrawer isOpen={state.drawerOpen} isRemoveFinished={state.drawerRemoveFinished}>
         {screenValue !== 1 && (
           <Box display="flex" alignItems="center" className="p-4 position-relative">
             <IconButton aria-label="goback" onClick={handlePreviousButton}>
@@ -249,7 +258,7 @@ const Index = (props) => {
             <FormButton onClick={handleNextButton}>{buttonText}</FormButton>
           </Box>
         </Container>
-      </Drawer>
+      </CustomDrawer>
     </>
   );
 };

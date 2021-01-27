@@ -9,12 +9,10 @@ function App() {
   const app = useRef(null);
   useEffect(() => {
     const preventGoBack = (e) => {
-      console.log(e);
-      if (e.pageX > 20 && e.pageX < window.innerWidth - 20) {
+      if (e.pageX > 50) {
         return;
-      } else {
-        e.preventDefault();
       }
+      e.preventDefault();
     };
     app.current.addEventListener("touchstart", preventGoBack);
 

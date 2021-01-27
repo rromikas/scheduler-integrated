@@ -25,6 +25,7 @@
     "react-confirm": "^0.1.20",
     "react-dom": "^16.14.0",
     "react-draggable": "^4.4.3",
+    "react-flip-toolkit": "^7.0.13",
     "react-map-gl": "^5.2.9",
     "react-scripts": "3.4.3",
     "react-select": "^3.1.0",
@@ -39,7 +40,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "analyze": "source-map-explorer 'build/static/js/*.js'"
   },
   "eslintConfig": {
     "extends": "react-app"
