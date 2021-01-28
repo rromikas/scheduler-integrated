@@ -390,6 +390,7 @@ const WeekScheduler = ({
                   });
                   setSelectedItems(arr);
                 }}
+                handleUnselectAll={() => setSelectedItems([])}
                 handleDelete={onDelete}
                 handleMerge={mergeSelectedRanges}
               ></ActionsPanel>

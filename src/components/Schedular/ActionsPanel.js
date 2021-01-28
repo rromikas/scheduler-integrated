@@ -6,6 +6,7 @@ import MoveIcon from "./icons/move.svg";
 import RemoveIcon from "./icons/remove.svg";
 import SettingsIcon from "./icons/settings.svg";
 import UnmergeIcon from "./icons/unmerge.svg";
+import DeleteIcon from "./icons/delete.svg";
 import React from "react";
 
 const ActionsPanel = ({
@@ -13,6 +14,7 @@ const ActionsPanel = ({
   activeButton,
   setActiveButton,
   handleSelectAll,
+  handleUnselectAll,
   handleDelete,
   handleMerge,
 }) => {
@@ -26,6 +28,16 @@ const ActionsPanel = ({
               onClick={() => {
                 handleDelete();
                 setActiveButton("remove");
+              }}
+              src={DeleteIcon}
+            ></img>
+          </div>
+          <div className="mr-3">
+            <img
+              className={"icon-btn"}
+              onClick={() => {
+                handleUnselectAll();
+                setActiveButton("unselect");
               }}
               src={RemoveIcon}
             ></img>
