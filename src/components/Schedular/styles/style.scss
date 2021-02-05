@@ -73,6 +73,7 @@ table {
 
 .icon-btn {
   cursor: pointer;
+  width: 28px;
   transition: transform 0.1s;
 }
 
@@ -82,17 +83,4 @@ table {
 
 .icon-btn:active {
   transform: scale(1.2);
-}
-
-.timeslot-label {
-  color: #021a53;
-  font-weight: 800;
-  font-size: 15px;
-  height: 28px;
-  width: 196px;
-  border-radius: 36px;
-  transition: transform 0.2s;
-  position: absolute;
-  top: 0;
-  left: 15px;
 }

@@ -8,7 +8,7 @@ import {
   convertMinsToHrsMins,
   insertIntoArrayWithSplicingOverlappingItems,
 } from "./scripts/helpers";
-import { withTheme } from "styled-components";
+import styled, { withTheme } from "styled-components";
 import { transparentize } from "polished";
 
 /* Range inputs structure:
@@ -30,8 +30,20 @@ import { transparentize } from "polished";
 <Relative container>
 */
 
+const RangeLabel = styled.div`
+color: #021a53;
+font-weight: 800;
+height: ${props => props.rangeLabelHeight}px;
+width: 196px;
+border-radius: 36px;
+transition: transform 0.2s;
+position: absolute;
+top: 0;
+left: 15px;
+`
+
 const Tooltip = ({ newRange, maxValue, totalMinutes, hourFormat, dayName, theme, tooltipWidth }) => {
-  const fonts = { small: 14, big: 22 };
+  const fonts = { small: 12, big: 22 };
   return (
     <div
       style={{
@@ -435,16 +447,17 @@ const DayTimeline = ({
             </div>
             <div style={mainRangeContainerStyle(x, i, isSelected)}>
               <div className="position-relative h-100">
-                <div
+                <RangeLabel
+                  rangeLabelHeight={rangeLabelHeight}
                   style={timeslotLabelStyle(isSelected)}
-                  className="d-flex align-items-center justify-content-center timeslot-label"
+                  className="d-flex align-items-center justify-content-center"
                 >
                   {dayName.substring(0, 3) +
                     " " +
                     convertMinsToHrsMins((x.range[0] / maxValue) * totalMinutes) +
                     "-" +
                     convertMinsToHrsMins((x.range[1] / maxValue) * totalMinutes)}
-                </div>
+                </RangeLabel>
               </div>
             </div>
           </React.Fragment>

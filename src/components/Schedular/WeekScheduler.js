@@ -24,65 +24,70 @@ import {
 import styled, { withTheme } from "styled-components";
 
 const WeekDayCard = styled.div`
-  width: 100px;
+  width: 120px;
   border-radius: 37px 0 0 37px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   font-weight: 800;
+  font-size: 16px;
   text-transform: uppercase;
   color: white;
-  background: ${props => props.theme.primary};
+  background: ${(props) => props.theme.primary};
+`;
+
+const TickContainer = styled.div`
+  padding-top: 5px;
+  padding-bottom: 5px;
+  height: ${(props) => props.tickHeight}px;
 `;
 
 const Tick = styled.div`
-  height: 36px;
-  border-left: ${props => props.index % props.cellsNumberInInterval === 0 ? "2px solid rgba(2,26,83, 0.2)" : "none"};
-  width: ${props => props.showLines ? props.cellWidth / props.cellsNumberInInterval : props.cellWidth}px;
-`
+  height: 100%;
+  border-left: ${(props) =>
+    props.index % props.cellsNumberInInterval === 0 ? "2px solid rgba(2,26,83, 0.2)" : "none"};
+  width: ${(props) =>
+    props.showLines ? props.cellWidth / props.cellsNumberInInterval : props.cellWidth}px;
+`;
 
 const CellsRow = styled.div`
-  height: ${props => props.cellHeight}px;
-  margin-bottom: ${props => props.spaceBetweenTimelines}px;
+  height: ${(props) => props.cellHeight}px;
+  margin-bottom: ${(props) => props.spaceBetweenTimelines}px;
   position: relative;
-`
+`;
 
 const Cell = styled.div`
-  border-left: ${props => props.index % props.cellsNumberInInterval === 0 ? 2 : 0.5}px solid #021A53;
-  border-bottom: 0.5px solid rgba(0,25,74,0.2);
-  border-top: 0.5px solid rgba(0,25,74,0.2);
-  width: ${props => props.showLines ? props.cellWidth / props.cellsNumberInInterval : props.cellWidth}px;
-`
+  border-left: ${(props) => (props.index % props.cellsNumberInInterval === 0 ? 2 : 0.5)}px solid
+    #021a53;
+  border-bottom: 0.5px solid rgba(0, 25, 74, 0.2);
+  border-top: 0.5px solid rgba(0, 25, 74, 0.2);
+  width: ${(props) =>
+    props.showLines ? props.cellWidth / props.cellsNumberInInterval : props.cellWidth}px;
+`;
 
 const TimeLabelContainer = styled.div`
-position: relative;
-width: ${props => props.cellWidth}px; 
-height: 20px;
-`
+  position: relative;
+  width: ${(props) => props.cellWidth}px;
+  height: ${(props) => props.timesHeight}px;
+`;
 
 const TimeLabel = styled.div`
-width: ${props => props.cellWidth * 2}px;
-display: flex;
-justify-content: center;
-position: absolute;
-bottom: 0;
-right: 0;
-`
+  width: ${(props) => props.cellWidth * 2}px;
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+`;
 
-
-const Times = ({ size, cellWidth, interval, totalMinutes, hourFormat, }) => {
+const Times = ({ size, cellWidth, interval, totalMinutes, hourFormat, timesHeight }) => {
   return (
-    <div
-      className="pb-1"
-      style={{ width: `${size}px`, color: "#2d2d61", fontWeight: 500 }}
-    >
-      <div className="d-flex w-100 position-relative" >
+    <div style={{ width: `${size}px`, color: "#2d2d61", fontWeight: 500 }}>
+      <div className="d-flex w-100 position-relative">
         {new Array(totalMinutes / interval).fill(0).map((_, i) => (
-          <TimeLabelContainer cellWidth={cellWidth} key={`time-${i}`} >
-            <TimeLabel
-              cellWidth={cellWidth}
-            >
+          <TimeLabelContainer cellWidth={cellWidth} timesHeight={timesHeight} key={`time-${i}`}>
+            <TimeLabel cellWidth={cellWidth}>
               {convertMinsToHrsMins(i * interval, hourFormat === 12)}
             </TimeLabel>
           </TimeLabelContainer>
@@ -110,7 +115,7 @@ const WeekScheduler = ({
   handlePrevious,
   weekStart,
   setWeekStart,
-  theme
+  theme,
 }) => {
   const leftPadding = 30;
   const {
@@ -121,7 +126,10 @@ const WeekScheduler = ({
     timeGapBetweenZooms,
     defaultHourFormat,
     defaultZoomOption,
-    spaceBetweenTimelines
+    spaceBetweenTimelines,
+    tickHeight,
+    timesHeight,
+    sidePanelWidth
   } = settings;
 
   const [activeButton, setActiveButton] = useState(""); //which button is currently active
@@ -415,7 +423,7 @@ const WeekScheduler = ({
     <div style={{ marginTop: "-8px" }}>
       <div className="d-flex" style={{ maxWidth: "100%", overflow: "hidden" }}>
         <div className="flex-grow-1" style={{ width: 0 }}>
-          <Box display="flex" justifyContent="space-between" className="p-4">
+          <Box display="flex" justifyContent="space-between" className="p-4 mb-4">
             <Box display="flex" alignItems="center">
               <IconButton aria-label="goback" onClick={handlePrevious}>
                 <ArrowBackIcon fontSize="large" />
@@ -455,12 +463,12 @@ const WeekScheduler = ({
             style={{ fontSize: "14px" }}
             ref={pageRef}
           >
-            <div className="px-5 pb-5 pt-2 w-100" style={{ overflowX: "auto" }}>
+            <div className="px-5 pb-5 w-100" style={{ overflowX: "auto" }}>
               <div className="d-flex">
                 <div style={{ marginRight: `-${leftPadding}px` }}>
                   <div
                     style={{
-                      height: "65px",
+                      height: tickHeight + timesHeight,
                       textAlign: "center",
                       fontWeight: "700",
                       color: "#2d2d61",
@@ -494,7 +502,7 @@ const WeekScheduler = ({
                     ref={scrollableContainer}
                     className="pb-3"
                     style={{
-                      height: 8 * cellHeight + 7 * 30 + 10,
+                      height: 7 * (cellHeight + spaceBetweenTimelines) + timesHeight + tickHeight + 10,
                       width: "100%",
                       overflowX: "auto",
                       overflowY: "hidden",
@@ -502,6 +510,7 @@ const WeekScheduler = ({
                     }}
                   >
                     <Times
+                      timesHeight={timesHeight}
                       hourFormat={hourFormat}
                       size={size}
                       interval={interval}
@@ -514,22 +523,18 @@ const WeekScheduler = ({
                           width: size,
                         }}
                       >
-                        <div
-                          className="d-flex align-items-end position-relative"
-                          style={{
-                            marginBottom: "5px",
-                          }}
-                        >
+                        <div className="d-flex align-items-end position-relative">
                           {new Array(totalMinutes / (showLines ? step : interval))
                             .fill(0)
                             .map((x, i) => (
-                              <Tick
-                                key={`step-${i}`}
-                                index={i}
-                                showLines={showLines}
-                                cellWidth={cellWidth}
-                                cellsNumberInInterval={interval / step}
-                              ></Tick>
+                              <TickContainer key={`step-${i}`} tickHeight={tickHeight}>
+                                <Tick
+                                  index={i}
+                                  showLines={showLines}
+                                  cellWidth={cellWidth}
+                                  cellsNumberInInterval={interval / step}
+                                ></Tick>
+                              </TickContainer>
                             ))}
                           <div
                             style={{
@@ -588,7 +593,7 @@ const WeekScheduler = ({
                           width: size,
                           top: 0,
                           left: 0,
-                          paddingTop: "41px",
+                          paddingTop: tickHeight,
                         }}
                       >
                         {currentSchedule.map((x, i) => (
@@ -634,10 +639,10 @@ const WeekScheduler = ({
         </div>
         <div
           style={{
-            width: "398px",
+            width: sidePanelWidth,
             borderLeft: "1px solid #021A53",
             transition: "margin-right 0.3s",
-            marginRight: activeButton === "info" || activeButton === "settings" ? 0 : "-398px",
+            marginRight: activeButton === "info" || activeButton === "settings" ? 0 : -sidePanelWidth,
           }}
           className="p-4"
         >

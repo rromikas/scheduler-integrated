@@ -95,6 +95,7 @@ table {
 
 .icon-btn {
   cursor: pointer;
+  width: 28px;
   -webkit-transition: -webkit-transform 0.1s;
   transition: -webkit-transform 0.1s;
   transition: transform 0.1s;
@@ -109,21 +110,5 @@ table {
 .icon-btn:active {
   -webkit-transform: scale(1.2);
           transform: scale(1.2);
-}
-
-.timeslot-label {
-  color: #021a53;
-  font-weight: 800;
-  font-size: 15px;
-  height: 28px;
-  width: 196px;
-  border-radius: 36px;
-  -webkit-transition: -webkit-transform 0.2s;
-  transition: -webkit-transform 0.2s;
-  transition: transform 0.2s;
-  transition: transform 0.2s, -webkit-transform 0.2s;
-  position: absolute;
-  top: 0;
-  left: 15px;
 }
 /*# sourceMappingURL=style.css.map */

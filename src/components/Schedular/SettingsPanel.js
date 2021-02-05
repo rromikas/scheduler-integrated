@@ -5,8 +5,7 @@ import ButtonBase from "@material-ui/core/ButtonBase";
 
 const styles = {
   root: {
-    height: 41,
-    fontSize: 20,
+    height: 38,
     fontWeight: 800,
   },
 
@@ -17,6 +16,10 @@ const styles = {
   outlined: {
     color: "#001D53",
     border: "1px solid #001D53",
+  },
+
+  title: {
+    color: "#021A53",
   },
 };
 
@@ -48,10 +51,14 @@ const SettingsPanel = ({
   };
 
   return (
-    <div style={{ fontWeight: 700, fontSize: 20 }}>
-      <div className="d-flex align-items-center" style={{ height: 59, marginBottom: 84 }}>
-        <img src={SettingsIcon} className="mr-3 icon-btn" onClick={onClose}></img>
-        <div style={{ fontSize: 30, fontWeight: 500 }}>Settings</div>
+    <div style={{ fontWeight: 700 }}>
+      <div className="pb-4 mb-4">
+        <div className="d-flex align-items-center" style={{ height: 59 }}>
+          <img src={SettingsIcon} className="mr-3 icon-btn" onClick={onClose}></img>
+          <div style={{ fontSize: 30, fontWeight: 500 }} className={classes.title}>
+            Settings
+          </div>
+        </div>
       </div>
       <div>
         <div>TIME FORMAT</div>

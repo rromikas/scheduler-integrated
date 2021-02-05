@@ -7,7 +7,10 @@
     { "interval": 15, "name": "15m", "cellWidth": 78, "step": 15 }
   ],
   "timeGapBetweenZooms": 80,
-  "cellHeight": 57,
+  "cellHeight": 59,
+  "tickHeight": 38,
+  "timesHeight": 22,
+  "sidePanelWidth": 358,
   "totalMinutes": 1440,
   "defaultHourFormat": 24,
   "defaultZoomOption": 0,

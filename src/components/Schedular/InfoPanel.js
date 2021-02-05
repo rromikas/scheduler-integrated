@@ -14,7 +14,7 @@ const styles = {
   listItem: {
     border: "1px solid #031142",
     borderRadius: 4,
-    marginTop: 6,
+    marginBottom: 6,
   },
   heading: {
     color: "#2d2d61",
@@ -37,10 +37,12 @@ const InfoPanel = ({ classes, currentSchedule, onClose }) => {
   const days = moment.weekdaysShort(true);
   return (
     <Box className={classes.root}>
-      <Box display="flex" alignItems="center" style={{ height: 59 }}>
-        <img src={InfoIcon} onClick={onClose} className="mr-3 icon-btn"></img>
-        <Typography className={classes.heading}>Info</Typography>
-      </Box>
+      <div className="mb-4 pb-4">
+        <Box display="flex" alignItems="center" style={{ height: 59 }}>
+          <img src={InfoIcon} onClick={onClose} className="mr-3 icon-btn"></img>
+          <Typography className={classes.heading}>Info</Typography>
+        </Box>
+      </div>
 
       <List>
         {currentSchedule.map((d, index) =>
