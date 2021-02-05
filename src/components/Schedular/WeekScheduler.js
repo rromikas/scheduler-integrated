@@ -4,7 +4,6 @@ import "bootstrap/dist/css/bootstrap.css";
 import "./styles/style.css";
 import moment from "moment";
 import settings from "./config";
-import FormButton from "components/FormButton";
 import GetMouseUser from "./scripts/getMouseUserOnWheel";
 import {
   onTouchStart,
@@ -22,21 +21,71 @@ import {
   convertMinsToHrsMins,
   insertIntoArrayWithSplicingOverlappingItems,
 } from "./scripts/helpers";
+import styled, { withTheme } from "styled-components";
 
-const Times = ({ size, cellWidth, interval, totalMinutes, hourFormat }) => {
+const WeekDayCard = styled.div`
+  width: 100px;
+  border-radius: 37px 0 0 37px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: white;
+  background: ${props => props.theme.primary};
+`;
+
+const Tick = styled.div`
+  height: 36px;
+  border-left: ${props => props.index % props.cellsNumberInInterval === 0 ? "2px solid rgba(2,26,83, 0.2)" : "none"};
+  width: ${props => props.showLines ? props.cellWidth / props.cellsNumberInInterval : props.cellWidth}px;
+`
+
+const CellsRow = styled.div`
+  height: ${props => props.cellHeight}px;
+  margin-bottom: ${props => props.spaceBetweenTimelines}px;
+  position: relative;
+`
+
+const Cell = styled.div`
+  border-left: ${props => props.index % props.cellsNumberInInterval === 0 ? 2 : 0.5}px solid #021A53;
+  border-bottom: 0.5px solid rgba(0,25,74,0.2);
+  border-top: 0.5px solid rgba(0,25,74,0.2);
+  width: ${props => props.showLines ? props.cellWidth / props.cellsNumberInInterval : props.cellWidth}px;
+`
+
+const TimeLabelContainer = styled.div`
+position: relative;
+width: ${props => props.cellWidth}px; 
+height: 20px;
+`
+
+const TimeLabel = styled.div`
+width: ${props => props.cellWidth * 2}px;
+display: flex;
+justify-content: center;
+position: absolute;
+bottom: 0;
+right: 0;
+`
+
+
+const Times = ({ size, cellWidth, interval, totalMinutes, hourFormat, }) => {
   return (
     <div
       className="pb-1"
-      style={{ width: `${size}px`, color: "#2d2d61", fontWeight: "500", fontSize: "20px" }}
+      style={{ width: `${size}px`, color: "#2d2d61", fontWeight: 500 }}
     >
-      <div className="d-flex w-100 position-relative" style={{ transform: "translateX(-51px)" }}>
+      <div className="d-flex w-100 position-relative" >
         {new Array(totalMinutes / interval).fill(0).map((_, i) => (
-          <div
-            key={`time-${i}`}
-            style={{ width: cellWidth, display: "flex", justifyContent: "center" }}
-          >
-            {convertMinsToHrsMins(i * interval, hourFormat === 12)}
-          </div>
+          <TimeLabelContainer cellWidth={cellWidth} key={`time-${i}`} >
+            <TimeLabel
+              cellWidth={cellWidth}
+            >
+              {convertMinsToHrsMins(i * interval, hourFormat === 12)}
+            </TimeLabel>
+          </TimeLabelContainer>
         ))}
         <div
           className="position-absolute"
@@ -61,6 +110,7 @@ const WeekScheduler = ({
   handlePrevious,
   weekStart,
   setWeekStart,
+  theme
 }) => {
   const leftPadding = 30;
   const {
@@ -70,6 +120,8 @@ const WeekScheduler = ({
     showLines,
     timeGapBetweenZooms,
     defaultHourFormat,
+    defaultZoomOption,
+    spaceBetweenTimelines
   } = settings;
 
   const [activeButton, setActiveButton] = useState(""); //which button is currently active
@@ -80,7 +132,7 @@ const WeekScheduler = ({
   const checkIfDraggingiIntervalRef = useRef(null);
 
   const zooming = useRef(false);
-  const [zoomOption, setZoomOption] = useState(1);
+  const [zoomOption, setZoomOption] = useState(defaultZoomOption);
   const [dragging, setDragging] = useState(false);
   const scrollInterval = useRef(null);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -371,7 +423,7 @@ const WeekScheduler = ({
               <Box
                 component="span"
                 className="schedule-title"
-                style={{ fontSize: 40, fontWeight: 600, color: "#021a53" }}
+                style={{ fontSize: 22, fontWeight: 600, color: "#021a53" }}
               >
                 Create Schedule
               </Box>
@@ -403,12 +455,12 @@ const WeekScheduler = ({
             style={{ fontSize: "14px" }}
             ref={pageRef}
           >
-            <div className="p-5 w-100" style={{ overflowX: "auto" }}>
+            <div className="px-5 pb-5 pt-2 w-100" style={{ overflowX: "auto" }}>
               <div className="d-flex">
                 <div style={{ marginRight: `-${leftPadding}px` }}>
                   <div
                     style={{
-                      height: "75px",
+                      height: "65px",
                       textAlign: "center",
                       fontWeight: "700",
                       color: "#2d2d61",
@@ -418,25 +470,9 @@ const WeekScheduler = ({
                     <div
                       key={`day-name-${i}`}
                       className="d-flex"
-                      style={{ marginBottom: "30px", height: cellHeight }}
+                      style={{ marginBottom: spaceBetweenTimelines, height: cellHeight }}
                     >
-                      <div
-                        style={{
-                          width: "150px",
-                          borderRadius: "37px 0 0 37px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          textAlign: "center",
-                          fontWeight: "800",
-                          fontSize: "20px",
-                          textTransform: "uppercase",
-                          color: "white",
-                          background: "#2d2d61",
-                        }}
-                      >
-                        {x}
-                      </div>
+                      <WeekDayCard theme={theme}>{x}</WeekDayCard>
                       <div
                         style={{
                           background: "white",
@@ -487,18 +523,13 @@ const WeekScheduler = ({
                           {new Array(totalMinutes / (showLines ? step : interval))
                             .fill(0)
                             .map((x, i) => (
-                              <div
+                              <Tick
                                 key={`step-${i}`}
-                                style={{
-                                  height: "36px",
-                                  borderLeft: `${
-                                    i % (interval / step) === 0
-                                      ? "2px solid rgba(2,26,83, 0.2)"
-                                      : "none"
-                                  }`,
-                                  width: showLines ? cellWidth / (interval / step) : cellWidth,
-                                }}
-                              ></div>
+                                index={i}
+                                showLines={showLines}
+                                cellWidth={cellWidth}
+                                cellsNumberInInterval={interval / step}
+                              ></Tick>
                             ))}
                           <div
                             style={{
@@ -512,29 +543,22 @@ const WeekScheduler = ({
                           ></div>
                         </div>
                         {new Array(7).fill(0).map((x, i) => (
-                          <div
+                          <CellsRow
                             className="d-flex"
                             key={`grid-row-${i}`}
-                            style={{
-                              height: cellHeight,
-                              marginBottom: "30px",
-                              position: "relative",
-                            }}
+                            cellHeight={cellHeight}
+                            spaceBetweenTimelines={spaceBetweenTimelines}
                           >
                             {new Array(totalMinutes / (showLines ? step : interval))
                               .fill(0)
                               .map((_, j) => (
-                                <div
+                                <Cell
                                   key={`row-${i}-cell-${j}`}
-                                  style={{
-                                    borderLeft: `${
-                                      j % (interval / step) === 0 ? 2 : 0.5
-                                    }px solid #021A53`,
-                                    borderBottom: "0.5px solid rgba(0,25,74,0.2)",
-                                    borderTop: "0.5px solid rgba(0,25,74,0.2)",
-                                    width: showLines ? cellWidth / (interval / step) : cellWidth,
-                                  }}
-                                ></div>
+                                  showLines={showLines}
+                                  index={j}
+                                  cellsNumberInInterval={interval / step}
+                                  cellWidth={cellWidth}
+                                ></Cell>
                               ))}
                             <div
                               style={{
@@ -548,7 +572,7 @@ const WeekScheduler = ({
                                 height: cellHeight,
                               }}
                             ></div>
-                          </div>
+                          </CellsRow>
                         ))}
                       </div>
                       <div
@@ -569,6 +593,7 @@ const WeekScheduler = ({
                       >
                         {currentSchedule.map((x, i) => (
                           <DayTimeline
+                            spaceBetweenTimelines={spaceBetweenTimelines}
                             activeButton={activeButton}
                             setActiveButton={setActiveButton}
                             hourFormat={hourFormat}
@@ -634,12 +659,12 @@ const WeekScheduler = ({
               }
             ></SettingsPanel>
           ) : (
-            ""
-          )}
+                ""
+              )}
         </div>
       </div>
     </div>
   );
 };
 
-export default WeekScheduler;
+export default withTheme(WeekScheduler);

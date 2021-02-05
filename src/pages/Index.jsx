@@ -51,7 +51,7 @@ const screens = [
 
 const Index = (props) => {
   const [state, setState] = useState({ drawerOpen: false, drawerRemoveFinished: true });
-  const [screenValue, setScreenValue] = useState(0);
+  const [screenValue, setScreenValue] = useState(1);
   const [pageTitle, setPageTitle] = useState(screens[0].pageTitle);
   const [buttonText, setButtonText] = useState(screens[0].buttonText);
   const [scheduleName, setScheduleName] = useState("");
@@ -252,7 +252,7 @@ const Index = (props) => {
             <Box
               component="span"
               className="schedule-title"
-              style={{ fontSize: "22px", fontWeight: 600, color: "#021a53" }}
+              style={{ fontSize: 22, fontWeight: 600, color: "#021a53" }}
             >
               {pageTitle}
             </Box>

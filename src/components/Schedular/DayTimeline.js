@@ -30,6 +30,39 @@ import { transparentize } from "polished";
 <Relative container>
 */
 
+const Tooltip = ({ newRange, maxValue, totalMinutes, hourFormat, dayName, theme, tooltipWidth }) => {
+  const fonts = { small: 14, big: 22 };
+  return (
+    <div
+      style={{
+        height: "100%",
+        padding: "4px 20px",
+        width: tooltipWidth,
+        borderRadius: "29px",
+        background: theme.primary,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        fontWeight: 700,
+      }}
+    >
+      <div style={{ color: "white" }}>
+        <div style={{ fontSize: fonts.small, lineHeight: `${fonts.small}px` }}>{dayName}</div>
+        <div style={{ fontSize: fonts.big, lineHeight: `${fonts.big}px` }}>
+          {convertMinsToHrsMins((newRange[0] / maxValue) * totalMinutes, hourFormat === 12)}
+        </div>
+      </div>
+      <div style={{ color: theme.secondary }}>
+        <div style={{ fontSize: fonts.small, lineHeight: `${fonts.small}px` }}>{dayName}</div>
+        <div style={{ fontSize: fonts.big, lineHeight: `${fonts.big}px` }}>
+          {convertMinsToHrsMins((newRange[1] / maxValue) * totalMinutes, hourFormat === 12)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 const DayTimeline = ({
   size,
   day,
@@ -47,12 +80,12 @@ const DayTimeline = ({
   setRanges,
   showLines,
   allRanges,
-  animation,
   pageRef,
   hourFormat,
   activeButton,
   setActiveButton,
   theme,
+  spaceBetweenTimelines
 }) => {
   const [active, setActive] = useState(-2); // which range of the day mouse is currently over.
   const [newRange, setNewRange] = useState([]);
@@ -62,8 +95,9 @@ const DayTimeline = ({
   const [innerTooltipPosition, setInnerTooltipPosition] = useState("end"); // there are two types of tooltip: inner and outer.
   const handlePushConstant = 10; // this constant helps to position range input handle to follow the mouse tighter
   const initialNewRangeValue = useRef({ captured: false, value: [], tried: 0 }); // Helps to correctly increment right side of range, when user draw timeslot from right to left
-  const tooltipWidth = 284; // static tooltip width, can not be changed. Helps to position tooltip correctly
+  const tooltipWidth = hourFormat === 24 ? 220 : 260; // static tooltip width, can not be changed. Helps to position tooltip correctly
   const newRangeWidth = rangeStepWidth * (newRange[1] - newRange[0]);
+  const rangeLabelHeight = 28;
 
   //setting tooltip position left based on new range width and protecting it not to go behind container
   let tooltipPositionLeft = rangeStepWidth * newRange[0] + newRangeWidth / 2 - tooltipWidth / 2;
@@ -76,7 +110,7 @@ const DayTimeline = ({
 
   const baseTrackStyle = {
     borderRadius: 0,
-    height: "72px",
+    height: cellHeight,
     cursor: "grab",
     top: 0,
   };
@@ -105,8 +139,8 @@ const DayTimeline = ({
             ? 0
             : 1
           : activeState === -2 || (value.toFixed(0) * step) % interval !== 0
-          ? 0
-          : 1
+            ? 0
+            : 1
         : 0,
       outline: 0,
       border: "none",
@@ -160,7 +194,7 @@ const DayTimeline = ({
 
   const timeslotLabelStyle = (isSelected) => {
     return {
-      transform: isSelected ? `translateY(-16px)` : `translateY(${(cellHeight - 38) / 2}px)`,
+      transform: isSelected ? `translateY(-16px)` : `translateY(${(cellHeight - rangeLabelHeight - 6) / 2}px)`,
       background: isSelected ? theme.secondary : theme.tertiary,
     };
   };
@@ -331,41 +365,15 @@ const DayTimeline = ({
     }
   };
 
-  const Tooltip = () => (
-    <div
-      style={{
-        height: "100%",
-        padding: "4px 20px",
-        width: tooltipWidth,
-        borderRadius: "29px",
-        background: theme.primary,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        fontWeight: 700,
-      }}
-    >
-      <div style={{ color: "white" }}>
-        <div style={{ fontSize: "15px", lineHeight: "15px" }}>{dayName}</div>
-        <div style={{ fontSize: "25px", lineHeight: "25px" }}>
-          {convertMinsToHrsMins((newRange[0] / maxValue) * totalMinutes, hourFormat === 12)}
-        </div>
-      </div>
-      <div style={{ color: theme.secondary }}>
-        <div style={{ fontSize: "15px", lineHeight: "15px" }}>{dayName}</div>
-        <div style={{ fontSize: "25px", lineHeight: "25px" }}>
-          {convertMinsToHrsMins((newRange[1] / maxValue) * totalMinutes, hourFormat === 12)}
-        </div>
-      </div>
-    </div>
-  );
+  const tooltipProps = { newRange, maxValue, totalMinutes, hourFormat, dayName, theme, tooltipWidth }
+
 
   return (
     <div
       onClick={(e) => {
         e.stopPropagation();
       }}
-      style={{ height: cellHeight, marginBottom: "30px" }}
+      style={{ height: cellHeight, marginBottom: spaceBetweenTimelines }}
       className={`w-100 position-relative`}
       onMouseUp={() => {
         addNewRange(rangeCandidate);
@@ -491,7 +499,7 @@ const DayTimeline = ({
           {newRangeWidth < 292 && (
             <div style={outerTooltipContainerStyle}>
               <div style={{ height: cellHeight - 12 }}>
-                <Tooltip></Tooltip>
+                <Tooltip {...tooltipProps}></Tooltip>
               </div>
               <div className="triangle-down mx-auto"></div>
             </div>
@@ -506,7 +514,7 @@ const DayTimeline = ({
             <div className="position-relative">
               <div style={newRangeContainerStyle}>
                 <div className={`w-100 d-flex justify-content-${innerTooltipPosition} h-100`}>
-                  {newRangeWidth >= 292 && <Tooltip></Tooltip>}
+                  {newRangeWidth >= 292 && <Tooltip {...tooltipProps}></Tooltip>}
                 </div>
               </div>
             </div>
