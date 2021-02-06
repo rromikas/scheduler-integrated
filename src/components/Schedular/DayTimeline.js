@@ -31,18 +31,26 @@ import { transparentize } from "polished";
 */
 
 const RangeLabel = styled.div`
-color: #021a53;
-font-weight: 800;
-height: ${props => props.rangeLabelHeight}px;
-width: 196px;
-border-radius: 36px;
-transition: transform 0.2s;
-position: absolute;
-top: 0;
-left: 15px;
-`
+  color: #021a53;
+  font-weight: 800;
+  height: ${(props) => props.rangeLabelHeight}px;
+  width: 196px;
+  border-radius: 36px;
+  transition: transform 0.2s;
+  position: absolute;
+  top: 0;
+  left: 15px;
+`;
 
-const Tooltip = ({ newRange, maxValue, totalMinutes, hourFormat, dayName, theme, tooltipWidth }) => {
+const Tooltip = ({
+  newRange,
+  maxValue,
+  totalMinutes,
+  hourFormat,
+  dayName,
+  theme,
+  tooltipWidth,
+}) => {
   const fonts = { small: 12, big: 22 };
   return (
     <div
@@ -72,8 +80,7 @@ const Tooltip = ({ newRange, maxValue, totalMinutes, hourFormat, dayName, theme,
       </div>
     </div>
   );
-}
-
+};
 
 const DayTimeline = ({
   size,
@@ -97,11 +104,12 @@ const DayTimeline = ({
   activeButton,
   setActiveButton,
   theme,
-  spaceBetweenTimelines
+  spaceBetweenTimelines,
+  setMovingRange,
+  movingRange,
 }) => {
   const [active, setActive] = useState(-2); // which range of the day mouse is currently over.
   const [newRange, setNewRange] = useState([]);
-  const [rangeCandidate, setRangeCandidate] = useState([]); // range candidate is used for copying ranges
   const maxValue = totalMinutes / step; // max range input value
   const rangeStepWidth = cellWidth / (interval / step); // how much pixels is equal to 1 unit of range input
   const [innerTooltipPosition, setInnerTooltipPosition] = useState("end"); // there are two types of tooltip: inner and outer.
@@ -110,6 +118,7 @@ const DayTimeline = ({
   const tooltipWidth = hourFormat === 24 ? 220 : 260; // static tooltip width, can not be changed. Helps to position tooltip correctly
   const newRangeWidth = rangeStepWidth * (newRange[1] - newRange[0]);
   const rangeLabelHeight = 28;
+  const [copiedRange, setCopiedRange] = useState({ range: [], from: 0 });
 
   //setting tooltip position left based on new range width and protecting it not to go behind container
   let tooltipPositionLeft = rangeStepWidth * newRange[0] + newRangeWidth / 2 - tooltipWidth / 2;
@@ -119,6 +128,38 @@ const DayTimeline = ({
         ? tooltipPositionLeft
         : 0
       : size.width - tooltipWidth;
+
+  useEffect(() => {
+    if (movingRange.released) {
+      if (movingRange.originDay === day) {
+        let rangesCopy = [...ranges];
+        rangesCopy.splice(movingRange.rangeIndex, 1);
+        if (movingRange.day === day) {
+          insertIntoArrayWithSplicingOverlappingItems(rangesCopy, movingRange.range, maxValue);
+        }
+
+        if (copiedRange.range.length) {
+          insertIntoArrayWithSplicingOverlappingItems(rangesCopy, copiedRange.range, maxValue);
+        }
+        setRanges(() => rangesCopy);
+
+        setMovingRange((prev) =>
+          Object.assign({}, prev, {
+            range: [],
+            from: 0,
+            rangeIndex: -1,
+            day: -1,
+            originDay: -1,
+          })
+        );
+      } else if (movingRange.day === day) {
+        addNewRange(movingRange.range);
+      }
+      if (copiedRange.range.length) {
+        setCopiedRange((prev) => Object.assign({}, prev, { range: [], from: 0 }));
+      }
+    }
+  }, [movingRange.released]);
 
   const baseTrackStyle = {
     borderRadius: 0,
@@ -151,8 +192,8 @@ const DayTimeline = ({
             ? 0
             : 1
           : activeState === -2 || (value.toFixed(0) * step) % interval !== 0
-            ? 0
-            : 1
+          ? 0
+          : 1
         : 0,
       outline: 0,
       border: "none",
@@ -182,9 +223,13 @@ const DayTimeline = ({
   const mainRangeContainerStyle = (element, index, isSelected) => {
     return {
       position: "absolute",
+      opacity:
+        movingRange.originDay === day && movingRange.rangeIndex === index && movingRange.day !== day
+          ? 0
+          : 1,
       top: 0,
       height: cellHeight,
-      zIndex: isSelected ? 45 : 20,
+      zIndex: isSelected ? 45 : index > -1 ? 24 : 20,
       left: rangeStepWidth * (element.range[0] / element.from) * maxValue,
       width: ((rangeStepWidth * (element.range[1] - element.range[0])) / element.from) * maxValue,
       background: theme.primary,
@@ -206,7 +251,9 @@ const DayTimeline = ({
 
   const timeslotLabelStyle = (isSelected) => {
     return {
-      transform: isSelected ? `translateY(-16px)` : `translateY(${(cellHeight - rangeLabelHeight - 6) / 2}px)`,
+      transform: isSelected
+        ? `translateY(-16px)`
+        : `translateY(${(cellHeight - rangeLabelHeight - 6) / 2}px)`,
       background: isSelected ? theme.secondary : theme.tertiary,
     };
   };
@@ -307,25 +354,29 @@ const DayTimeline = ({
 
   const inputhandlers = {
     mainOnChange: (val, x, i) => {
-      if (activeButton === "move" || val[1] - val[0] !== x.range[1] - x.range[0]) {
-        setRanges((prev) => {
-          let arr = [...prev];
-          arr[i].range = val;
-          arr[i].from = maxValue;
-          return arr;
-        });
+      setRanges((prev) => {
+        let arr = [...prev];
+        arr[i].range = val;
+        arr[i].from = maxValue;
+        return arr;
+      });
+
+      if (["move", "copy"].includes(activeButton)) {
+        setMovingRange((prev) => Object.assign({}, prev, { range: val, from: maxValue }));
       }
     },
     mainOnAfterChange: (val, x, i) => {
       pageRef.current.focus({ preventScroll: true }); // this is necesary for zooming funcionality, page ref has keydown listener.
-      if (val[0] === val[1]) {
-        removeRange(i);
-      } else {
-        setRanges((prev) => {
-          let arr = [...prev];
-          insertIntoArrayWithSplicingOverlappingItems(arr, val, maxValue);
-          return arr;
-        });
+      if (!["move", "copy"].includes(activeButton)) {
+        if (val[0] === val[1]) {
+          removeRange(i);
+        } else {
+          setRanges((prev) => {
+            let arr = [...prev];
+            insertIntoArrayWithSplicingOverlappingItems(arr, val, maxValue);
+            return arr;
+          });
+        }
       }
     },
     newRangeOnChange: (val) => {
@@ -364,21 +415,15 @@ const DayTimeline = ({
     }
   };
 
-  const drawCopiedTimeslot = () => {
-    if (
-      activeButton === "copy" &&
-      dragging &&
-      selectedItems.length === 1 &&
-      +selectedItems[0].split("-")[0] !== day
-    ) {
-      let parts = selectedItems[0].split("-").map((x) => parseInt(x));
-      let rc = JSON.parse(JSON.stringify(allRanges[parts[0]][parts[1]].range));
-      setRangeCandidate(rc);
-    }
+  const tooltipProps = {
+    newRange,
+    maxValue,
+    totalMinutes,
+    hourFormat,
+    dayName,
+    theme,
+    tooltipWidth,
   };
-
-  const tooltipProps = { newRange, maxValue, totalMinutes, hourFormat, dayName, theme, tooltipWidth }
-
 
   return (
     <div
@@ -387,32 +432,64 @@ const DayTimeline = ({
       }}
       style={{ height: cellHeight, marginBottom: spaceBetweenTimelines }}
       className={`w-100 position-relative`}
-      onMouseUp={() => {
-        addNewRange(rangeCandidate);
-        setRangeCandidate([]);
+      onMouseMove={(e) => {
+        decideWhichRangeInputShoudBeActive(e);
       }}
-      onMouseMove={decideWhichRangeInputShoudBeActive}
-      onMouseEnter={drawCopiedTimeslot}
+      onMouseEnter={() => {
+        setMovingRange((prev) => {
+          return Object.assign({}, prev, { day });
+        });
+      }}
       onMouseLeave={() => {
         setActive(-2);
-        setRangeCandidate([]);
+        if (activeButton === "move" && dragging && active > -1) {
+          setMovingRange((prev) =>
+            Object.assign({}, prev, {
+              day: -1,
+            })
+          );
+        }
       }}
     >
-      <div className="position-absolute w-100" style={{ top: 0, left: 0, zIndex: 0 }}>
-        <Range
-          value={rangeCandidate}
-          step={1}
-          max={maxValue}
-          min={0}
-          trackStyle={[
-            Object.assign({}, baseTrackStyle, {
-              backgroundColor: transparentize(0.5, theme.primary),
-            }),
-          ]}
-          handleStyle={[{ opacity: 0 }, { opacity: 0 }]}
-          railStyle={{ opacity: 0 }}
-        ></Range>
-      </div>
+      {movingRange.day === day && movingRange.range.length ? (
+        <div style={mainRangeContainerStyle(movingRange, -1, false)} id="moving-range">
+          <div className="position-relative h-100">
+            <RangeLabel
+              rangeLabelHeight={rangeLabelHeight}
+              style={timeslotLabelStyle(false)}
+              className="d-flex align-items-center justify-content-center"
+            >
+              {dayName.substring(0, 3) +
+                " " +
+                convertMinsToHrsMins((movingRange.range[0] / maxValue) * totalMinutes) +
+                "-" +
+                convertMinsToHrsMins((movingRange.range[1] / maxValue) * totalMinutes)}
+            </RangeLabel>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
+      {copiedRange.range.length ? (
+        <div style={mainRangeContainerStyle(copiedRange, -1, false)} id="copied-range">
+          <div className="position-relative h-100">
+            <RangeLabel
+              rangeLabelHeight={rangeLabelHeight}
+              style={timeslotLabelStyle(false)}
+              className="d-flex align-items-center justify-content-center"
+            >
+              {dayName.substring(0, 3) +
+                " " +
+                convertMinsToHrsMins((copiedRange.range[0] / maxValue) * totalMinutes) +
+                "-" +
+                convertMinsToHrsMins((copiedRange.range[1] / maxValue) * totalMinutes)}
+            </RangeLabel>
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
+
       {ranges.map((x, i) => {
         const isSelected = selectedItems.includes(day + "-" + i);
         return (
@@ -423,6 +500,23 @@ const DayTimeline = ({
                 e.stopPropagation();
                 setDragging(true);
                 addNewRangeToSelectedItems(e, day, i);
+                if (["move", "copy"].includes(activeButton)) {
+                  setMovingRange((prev) =>
+                    Object.assign({}, prev, {
+                      range: x.range,
+                      from: x.from,
+                      day: day,
+                      originDay: day,
+                      rangeIndex: i,
+                      released: false,
+                    })
+                  );
+                }
+                if (activeButton === "copy") {
+                  setCopiedRange((prev) =>
+                    Object.assign({}, prev, { range: x.range, from: x.from })
+                  );
+                }
               }}
               className="position-absolute w-100"
               style={{

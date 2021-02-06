@@ -97,7 +97,7 @@ const Times = ({ size, cellWidth, interval, totalMinutes, hourFormat, timesHeigh
           style={{
             top: 0,
             right: `-${cellWidth}px`,
-            width: cellWidth,
+            width: 2 * cellWidth,
             display: "flex",
             justifyContent: "center",
           }}
@@ -129,7 +129,7 @@ const WeekScheduler = ({
     spaceBetweenTimelines,
     tickHeight,
     timesHeight,
-    sidePanelWidth
+    sidePanelWidth,
   } = settings;
 
   const [activeButton, setActiveButton] = useState(""); //which button is currently active
@@ -144,6 +144,14 @@ const WeekScheduler = ({
   const [dragging, setDragging] = useState(false);
   const scrollInterval = useRef(null);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [movingRange, setMovingRange] = useState({
+    range: [],
+    from: 0,
+    day: -1,
+    originDay: -1,
+    rangeIndex: -1,
+    released: false,
+  });
 
   const { cellWidth, interval, step } = zoomOptions[zoomOption];
   const size = (totalMinutes / interval) * cellWidth;
@@ -335,6 +343,7 @@ const WeekScheduler = ({
   useEffect(() => {
     const mouseup = () => {
       setDragging(false);
+      setMovingRange((prev) => Object.assign({}, prev, { released: true }));
       setAllowScrollLeft(false);
       setAllowScrollRight(false);
     };
@@ -502,7 +511,8 @@ const WeekScheduler = ({
                     ref={scrollableContainer}
                     className="pb-3"
                     style={{
-                      height: 7 * (cellHeight + spaceBetweenTimelines) + timesHeight + tickHeight + 10,
+                      height:
+                        7 * (cellHeight + spaceBetweenTimelines) + timesHeight + tickHeight + 10,
                       width: "100%",
                       overflowX: "auto",
                       overflowY: "hidden",
@@ -598,6 +608,8 @@ const WeekScheduler = ({
                       >
                         {currentSchedule.map((x, i) => (
                           <DayTimeline
+                            setMovingRange={setMovingRange}
+                            movingRange={movingRange}
                             spaceBetweenTimelines={spaceBetweenTimelines}
                             activeButton={activeButton}
                             setActiveButton={setActiveButton}
@@ -642,7 +654,8 @@ const WeekScheduler = ({
             width: sidePanelWidth,
             borderLeft: "1px solid #021A53",
             transition: "margin-right 0.3s",
-            marginRight: activeButton === "info" || activeButton === "settings" ? 0 : -sidePanelWidth,
+            marginRight:
+              activeButton === "info" || activeButton === "settings" ? 0 : -sidePanelWidth,
           }}
           className="p-4"
         >
@@ -664,8 +677,8 @@ const WeekScheduler = ({
               }
             ></SettingsPanel>
           ) : (
-                ""
-              )}
+            ""
+          )}
         </div>
       </div>
     </div>
