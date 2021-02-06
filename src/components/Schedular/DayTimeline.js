@@ -220,6 +220,20 @@ const DayTimeline = ({
     pointerEvents: "none",
   };
 
+  const movingRangeContainerStyle = (element, index, isSelected) => {
+    return {
+      position: "absolute",
+      opacity: activeButton === "copy" ? 0.5 : 1,
+      top: 0,
+      height: cellHeight,
+      zIndex: isSelected ? 45 : index > -1 ? 24 : 20,
+      left: rangeStepWidth * (element.range[0] / element.from) * maxValue,
+      width: ((rangeStepWidth * (element.range[1] - element.range[0])) / element.from) * maxValue,
+      background: theme.primary,
+      border: `3px solid ${theme.primary}`,
+    };
+  };
+
   const mainRangeContainerStyle = (element, index, isSelected) => {
     return {
       position: "absolute",
@@ -452,7 +466,7 @@ const DayTimeline = ({
       }}
     >
       {movingRange.day === day && movingRange.range.length ? (
-        <div style={mainRangeContainerStyle(movingRange, -1, false)} id="moving-range">
+        <div style={movingRangeContainerStyle(movingRange, -1, false)} id="moving-range">
           <div className="position-relative h-100">
             <RangeLabel
               rangeLabelHeight={rangeLabelHeight}
