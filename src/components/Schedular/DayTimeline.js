@@ -617,7 +617,7 @@ const DayTimeline = ({
       </div>
       {newRange.length === 2 && newRange[0] !== newRange[1] && (
         <React.Fragment>
-          {newRangeWidth < 292 && (
+          {newRangeWidth < tooltipWidth + 10 && (
             <div style={outerTooltipContainerStyle}>
               <div style={{ height: cellHeight - 12 }}>
                 <Tooltip {...tooltipProps}></Tooltip>
@@ -635,7 +635,7 @@ const DayTimeline = ({
             <div className="position-relative">
               <div style={newRangeContainerStyle}>
                 <div className={`w-100 d-flex justify-content-${innerTooltipPosition} h-100`}>
-                  {newRangeWidth >= 292 && <Tooltip {...tooltipProps}></Tooltip>}
+                  {newRangeWidth >= tooltipWidth + 10 && <Tooltip {...tooltipProps}></Tooltip>}
                 </div>
               </div>
             </div>

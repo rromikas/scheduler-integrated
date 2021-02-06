@@ -20,46 +20,42 @@ const ActionsPanel = ({
 }) => {
   return (
     <div className="d-flex user-select-none align-items-center" style={{ height: 59 }}>
-      {selectedItemsLength ? (
-        <React.Fragment>
-          <div className="mr-3">
-            <img
-              className={"icon-btn"}
-              onClick={() => {
-                handleDelete();
-                setActiveButton("remove");
-              }}
-              src={DeleteIcon}
-            ></img>
-          </div>
-          <div className="mr-3">
-            <img
-              className={"icon-btn"}
-              onClick={() => {
-                handleUnselectAll();
-                setActiveButton("unselect");
-              }}
-              src={RemoveIcon}
-            ></img>
-          </div>
-          <div className="mr-3">
-            <img
-              className={`icon-btn ${activeButton === "copy" ? "icon-btn-active" : ""}`}
-              onClick={() => setActiveButton(activeButton === "copy" ? "" : "copy")}
-              src={CopyIcon}
-            ></img>
-          </div>
-          <div className="pr-3 mr-3" style={{ borderRight: "2px solid #021A53" }}>
-            <img
-              className={`icon-btn ${activeButton === "move" ? "icon-btn-active" : ""}`}
-              onClick={() => setActiveButton(activeButton === "move" ? "" : "move")}
-              src={MoveIcon}
-            ></img>
-          </div>
-        </React.Fragment>
-      ) : (
-        ""
-      )}
+      <div className="d-flex align-items-center" style={{ opacity: selectedItemsLength ? 1 : 0 }}>
+        <div className="mr-3">
+          <img
+            className={"icon-btn"}
+            onClick={() => {
+              handleDelete();
+              setActiveButton("remove");
+            }}
+            src={DeleteIcon}
+          ></img>
+        </div>
+        <div className="mr-3">
+          <img
+            className={"icon-btn"}
+            onClick={() => {
+              handleUnselectAll();
+              setActiveButton("unselect");
+            }}
+            src={RemoveIcon}
+          ></img>
+        </div>
+        <div className="mr-3">
+          <img
+            className={`icon-btn ${activeButton === "copy" ? "icon-btn-active" : ""}`}
+            onClick={() => setActiveButton(activeButton === "copy" ? "" : "copy")}
+            src={CopyIcon}
+          ></img>
+        </div>
+        <div className="pr-3 mr-3" style={{ borderRight: "2px solid #021A53" }}>
+          <img
+            className={`icon-btn ${activeButton === "move" ? "icon-btn-active" : ""}`}
+            onClick={() => setActiveButton(activeButton === "move" ? "" : "move")}
+            src={MoveIcon}
+          ></img>
+        </div>
+      </div>
       {selectedItemsLength >= 2 ? (
         <div className="mr-3">
           <img

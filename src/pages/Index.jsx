@@ -51,7 +51,7 @@ const screens = [
 
 const Index = (props) => {
   const [state, setState] = useState({ drawerOpen: false, drawerRemoveFinished: true });
-  const [screenValue, setScreenValue] = useState(1);
+  const [screenValue, setScreenValue] = useState(0);
   const [pageTitle, setPageTitle] = useState(screens[0].pageTitle);
   const [buttonText, setButtonText] = useState(screens[0].buttonText);
   const [scheduleName, setScheduleName] = useState("");

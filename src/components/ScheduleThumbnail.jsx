@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import Draggable from "react-draggable";
 import CloseIcon from "@material-ui/icons/Close";
+import DeleteIcon from "@material-ui/icons/DeleteOutline";
 import { Range } from "rc-slider";
 import "rc-slider/assets/index.css";
 
@@ -111,7 +112,7 @@ const ScheduleThumbnail = (props) => {
                 <FontAwesomeIcon className={classes.editIcon} icon={faEdit} />
               </IconButton>
               <IconButton onClick={deleteScd}>
-                <CloseIcon />
+                <DeleteIcon />
               </IconButton>
             </Box>
           </Box>

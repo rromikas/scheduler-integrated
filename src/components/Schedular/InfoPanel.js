@@ -33,7 +33,7 @@ const styles = {
   },
 };
 
-const InfoPanel = ({ classes, currentSchedule, onClose }) => {
+const InfoPanel = ({ classes, currentSchedule, onClose, schedulerHeight, shouldOverflow }) => {
   const days = moment.weekdaysShort(true);
   return (
     <Box className={classes.root}>
@@ -44,7 +44,13 @@ const InfoPanel = ({ classes, currentSchedule, onClose }) => {
         </Box>
       </div>
 
-      <List>
+      <List
+        style={{
+          maxHeight: schedulerHeight,
+          overflowY: "auto",
+          padding: "0 10px",
+        }}
+      >
         {currentSchedule.map((d, index) =>
           d.map((r) => (
             <ListItem key={index} className={classes.listItem}>

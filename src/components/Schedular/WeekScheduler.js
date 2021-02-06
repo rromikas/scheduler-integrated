@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import DayTimeline from "./DayTimeline";
 import "bootstrap/dist/css/bootstrap.css";
 import "./styles/style.css";
@@ -22,6 +22,7 @@ import {
   insertIntoArrayWithSplicingOverlappingItems,
 } from "./scripts/helpers";
 import styled, { withTheme } from "styled-components";
+import { slice } from "lodash";
 
 const WeekDayCard = styled.div`
   width: 120px;
@@ -132,6 +133,8 @@ const WeekScheduler = ({
     sidePanelWidth,
   } = settings;
 
+  const schedulerHeight = timesHeight + tickHeight + 7 * (cellHeight + spaceBetweenTimelines) + 10;
+
   const [activeButton, setActiveButton] = useState(""); //which button is currently active
   const [hourFormat, setHourFormat] = useState(defaultHourFormat);
 
@@ -170,6 +173,15 @@ const WeekScheduler = ({
       dow: weekStart,
     },
   });
+
+  useEffect(() => {
+    let scheduleCopy = JSON.parse(JSON.stringify(currentSchedule));
+    if (weekStart === 0) {
+      setCurrentSchedule([scheduleCopy[6], ...scheduleCopy].slice(0, 7));
+    } else if (weekStart === 1) {
+      setCurrentSchedule([...scheduleCopy, scheduleCopy[0]].slice(-7));
+    }
+  }, [weekStart]);
 
   useEffect(() => {
     let interval;
@@ -340,20 +352,23 @@ const WeekScheduler = ({
     });
   };
 
-  useEffect(() => {
-    const mouseup = () => {
-      setDragging(false);
+  const onMouseUp = useCallback(() => {
+    setDragging(false);
+    if (!movingRange.released) {
       setMovingRange((prev) => Object.assign({}, prev, { released: true }));
-      setAllowScrollLeft(false);
-      setAllowScrollRight(false);
-    };
-    window.addEventListener("mouseup", mouseup);
+    }
+    setAllowScrollLeft(false);
+    setAllowScrollRight(false);
+  }, [setDragging, setMovingRange, setAllowScrollLeft, setAllowScrollRight, movingRange.released]);
+
+  useEffect(() => {
+    window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("touchstart", preventGoBack);
     return () => {
-      window.removeEventListener("mouseup", mouseup);
+      window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("touchstart", preventGoBack);
     };
-  }, []);
+  }, [onMouseUp, preventGoBack]);
 
   useEffect(() => {
     const keydown = (e) => {
@@ -511,8 +526,7 @@ const WeekScheduler = ({
                     ref={scrollableContainer}
                     className="pb-3"
                     style={{
-                      height:
-                        7 * (cellHeight + spaceBetweenTimelines) + timesHeight + tickHeight + 10,
+                      height: schedulerHeight,
                       width: "100%",
                       overflowX: "auto",
                       overflowY: "hidden",
@@ -638,7 +652,7 @@ const WeekScheduler = ({
                             size={{ width: size }}
                             step={step}
                             day={i}
-                            dayName={moment.weekdays()[i]}
+                            dayName={moment.weekdays(true)[i]}
                           ></DayTimeline>
                         ))}
                       </div>
@@ -650,6 +664,7 @@ const WeekScheduler = ({
           </div>
         </div>
         <div
+          onClick={() => setSelectedItems([])}
           style={{
             width: sidePanelWidth,
             borderLeft: "1px solid #021A53",
@@ -657,10 +672,11 @@ const WeekScheduler = ({
             marginRight:
               activeButton === "info" || activeButton === "settings" ? 0 : -sidePanelWidth,
           }}
-          className="p-4"
+          className="p-4 bg-white"
         >
           {activeButton === "info" ? (
             <InfoPanel
+              schedulerHeight={schedulerHeight}
               currentSchedule={currentSchedule}
               onClose={() => setActiveButton("")}
             ></InfoPanel>
