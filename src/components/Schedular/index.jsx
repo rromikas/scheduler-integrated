@@ -1,6 +1,5 @@
 import WeekScheduler from "./WeekScheduler";
 import { ThemeProvider } from "styled-components";
-import Config from "./config";
 import React from "react";
 
 const ThemedScheduler = (props) => {

@@ -1,12 +1,11 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
-import { Card, CardContent, Typography, Box, Divider, IconButton } from "@material-ui/core";
+import { Card, CardContent, Typography, Box, IconButton } from "@material-ui/core";
 import { withStyles } from "@material-ui/core/styles";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import Draggable from "react-draggable";
-import CloseIcon from "@material-ui/icons/Close";
 import DeleteIcon from "@material-ui/icons/DeleteOutline";
 import { Range } from "rc-slider";
 import "rc-slider/assets/index.css";
@@ -122,7 +121,7 @@ const ScheduleThumbnail = (props) => {
                 className="px-2 text-left"
                 style={{ fontSize: "9px", fontWeight: "800", color: "#2d2d61" }}
               >
-                {moment.weekdays().map((x, i) => (
+                {moment.weekdays(true).map((x, i) => (
                   <div style={{ height: "20px", lineHeight: "20px" }} key={`week-day-${i}`}>
                     {x}
                   </div>

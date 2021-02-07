@@ -22,7 +22,6 @@ import {
   insertIntoArrayWithSplicingOverlappingItems,
 } from "./scripts/helpers";
 import styled, { withTheme } from "styled-components";
-import { slice } from "lodash";
 
 const WeekDayCard = styled.div`
   width: 120px;
@@ -141,6 +140,7 @@ const WeekScheduler = ({
   const scrollableContainer = useRef(null);
   const zoomableContainer = useRef(null);
   const checkIfDraggingiIntervalRef = useRef(null);
+  const didMountRef = useRef(false);
 
   const zooming = useRef(false);
   const [zoomOption, setZoomOption] = useState(defaultZoomOption);
@@ -175,11 +175,15 @@ const WeekScheduler = ({
   });
 
   useEffect(() => {
-    let scheduleCopy = JSON.parse(JSON.stringify(currentSchedule));
-    if (weekStart === 0) {
-      setCurrentSchedule([scheduleCopy[6], ...scheduleCopy].slice(0, 7));
-    } else if (weekStart === 1) {
-      setCurrentSchedule([...scheduleCopy, scheduleCopy[0]].slice(-7));
+    if (didMountRef.current) {
+      let scheduleCopy = JSON.parse(JSON.stringify(currentSchedule));
+      if (weekStart === 0) {
+        setCurrentSchedule([scheduleCopy[6], ...scheduleCopy].slice(0, 7));
+      } else if (weekStart === 1) {
+        setCurrentSchedule([...scheduleCopy, scheduleCopy[0]].slice(-7));
+      }
+    } else {
+      didMountRef.current = true;
     }
   }, [weekStart]);
 
