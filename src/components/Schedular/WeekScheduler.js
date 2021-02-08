@@ -130,6 +130,7 @@ const WeekScheduler = ({
     tickHeight,
     timesHeight,
     sidePanelWidth,
+    rangeLabelHeight,
   } = settings;
 
   const schedulerHeight = timesHeight + tickHeight + 7 * (cellHeight + spaceBetweenTimelines) + 10;
@@ -626,6 +627,7 @@ const WeekScheduler = ({
                       >
                         {currentSchedule.map((x, i) => (
                           <DayTimeline
+                            rangeLabelHeight={rangeLabelHeight}
                             setMovingRange={setMovingRange}
                             movingRange={movingRange}
                             spaceBetweenTimelines={spaceBetweenTimelines}

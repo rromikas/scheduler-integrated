@@ -32,9 +32,10 @@ import { transparentize } from "polished";
 
 const RangeLabel = styled.div`
   color: #021a53;
-  font-weight: 800;
+  font-weight: 700;
+  font-size: 12px;
   height: ${(props) => props.rangeLabelHeight}px;
-  width: 196px;
+  width: 146px;
   border-radius: 36px;
   transition: transform 0.2s;
   position: absolute;
@@ -107,6 +108,7 @@ const DayTimeline = ({
   spaceBetweenTimelines,
   setMovingRange,
   movingRange,
+  rangeLabelHeight,
 }) => {
   const [active, setActive] = useState(-2); // which range of the day mouse is currently over.
   const [newRange, setNewRange] = useState([]);
@@ -117,7 +119,6 @@ const DayTimeline = ({
   const initialNewRangeValue = useRef({ captured: false, value: [], tried: 0 }); // Helps to correctly increment right side of range, when user draw timeslot from right to left
   const tooltipWidth = hourFormat === 24 ? 220 : 260; // static tooltip width, can not be changed. Helps to position tooltip correctly
   const newRangeWidth = rangeStepWidth * (newRange[1] - newRange[0]);
-  const rangeLabelHeight = 28;
   const [copiedRange, setCopiedRange] = useState({ range: [], from: 0 });
 
   //setting tooltip position left based on new range width and protecting it not to go behind container
