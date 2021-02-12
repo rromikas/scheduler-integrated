@@ -11,25 +11,6 @@ import {
 import styled, { withTheme } from "styled-components";
 import { transparentize } from "polished";
 
-/* Range inputs structure:
-<Relative container>
-  <Candidate range input>
-
-  <Already set timeslots>
-    <Many divs that respresent aleready set values>
-    <Many transparent input ranges that are above divs and can change timeslots value>
-  <Already set timeslots>
-
-  <Range unmerge overlay>
-  
-  <New Range Zone>
-    <Range input for new timeslots>
-    <Outer tooltip zone>
-    <Div that represents new range input value with text inside>
-  <New Range Zone>
-<Relative container>
-*/
-
 const RangeLabel = styled.div`
   color: #021a53;
   font-weight: 700;
@@ -83,6 +64,89 @@ const Tooltip = ({
   );
 };
 
+const Timeslot = styled.div`
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  height: ${(props) => props.cellHeight}px;
+  background: ${(props) => props.theme.primary};
+  border: ${(props) =>
+    props.withBorder ? `3px solid ${props.theme.secondary}` : `3px solid ${props.theme.primary}`};
+`;
+
+const DayTimelineMerged = ({
+  timeslots,
+  activeRangeIndex,
+  rangeStepWidth,
+  maxValue,
+  theme,
+  day,
+  selectedItems,
+  movingRange,
+  cellHeight,
+  totalMinutes,
+  dayName,
+  rangeLabelHeight,
+}) => {
+  let mergedTimeslots = [];
+  let tcopy = JSON.parse(JSON.stringify(timeslots));
+  tcopy.forEach((x, i) => {
+    const length = mergedTimeslots.length;
+    if (!length) {
+      mergedTimeslots.push(Object.assign({}, x, { contains: [i] }));
+    } else if (mergedTimeslots[length - 1].range[1] === x.range[0]) {
+      mergedTimeslots[length - 1].range[1] = x.range[1];
+      mergedTimeslots[length - 1].contains.push(i);
+    } else {
+      mergedTimeslots.push(Object.assign({}, x, { contains: [i] }));
+    }
+  });
+
+  return mergedTimeslots.map((x, i) => {
+    const isSelected = x.contains.filter((y) => selectedItems.includes(day + "-" + y)).length;
+    return (
+      <Timeslot
+        key={`merged-timeslot-${day}-${i}`}
+        isTransparent={
+          !(
+            movingRange.originDay === day &&
+            x.contains.includes(movingRange.rangeIndex) &&
+            movingRange.day !== day
+          )
+        }
+        withBorder={isSelected || x.contains.includes(activeRangeIndex)}
+        cellHeight={cellHeight}
+        theme={theme}
+        style={{
+          zIndex: isSelected ? 47 : 26, // little higher than unmerged timeslot
+          left: rangeStepWidth * (x.range[0] / x.from) * maxValue,
+          width: ((rangeStepWidth * (x.range[1] - x.range[0])) / x.from) * maxValue,
+        }}
+      >
+        <div className="position-relative h-100">
+          <RangeLabel
+            rangeLabelHeight={rangeLabelHeight}
+            style={{
+              transition: "transform 0.2s",
+              transform: isSelected
+                ? `translateY(-${rangeLabelHeight / 2 + 2}px)`
+                : `translateY(${(cellHeight - rangeLabelHeight - 6) / 2}px)`,
+              background: isSelected ? theme.secondary : theme.tertiary,
+            }}
+            className="d-flex align-items-center justify-content-center"
+          >
+            {dayName.substring(0, 3) +
+              " " +
+              convertMinsToHrsMins((x.range[0] / maxValue) * totalMinutes) +
+              "-" +
+              convertMinsToHrsMins((x.range[1] / maxValue) * totalMinutes)}
+          </RangeLabel>
+        </div>
+      </Timeslot>
+    );
+  });
+};
+
 const DayTimeline = ({
   size,
   day,
@@ -99,7 +163,6 @@ const DayTimeline = ({
   ranges,
   setRanges,
   showLines,
-  allRanges,
   pageRef,
   hourFormat,
   activeButton,
@@ -109,6 +172,8 @@ const DayTimeline = ({
   setMovingRange,
   movingRange,
   rangeLabelHeight,
+  joinAdjacent,
+  setJoinAdjacent,
 }) => {
   const [active, setActive] = useState(-2); // which range of the day mouse is currently over.
   const [newRange, setNewRange] = useState([]);
@@ -160,7 +225,7 @@ const DayTimeline = ({
         setCopiedRange((prev) => Object.assign({}, prev, { range: [], from: 0 }));
       }
     }
-  }, [movingRange.released]);
+  }, [movingRange.released]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const baseTrackStyle = {
     borderRadius: 0,
@@ -255,22 +320,13 @@ const DayTimeline = ({
     };
   };
 
-  const unmergeLayerStyle = {
+  const cutLayerStyle = {
     position: "absolute",
     top: 0,
     height: cellHeight,
-    zIndex: activeButton === "unmerge" ? 52 : -2,
+    zIndex: activeButton === "cut" ? 52 : -2,
     left: 0,
     width: "100%",
-  };
-
-  const timeslotLabelStyle = (isSelected) => {
-    return {
-      transform: isSelected
-        ? `translateY(-16px)`
-        : `translateY(${(cellHeight - rangeLabelHeight - 6) / 2}px)`,
-      background: isSelected ? theme.secondary : theme.tertiary,
-    };
   };
 
   const parseMouseEvent = (e) => {
@@ -288,7 +344,7 @@ const DayTimeline = ({
     return { rangeIndex, x, mouseY };
   };
 
-  const unmergeAtPoint = (x, rangeIndex) => {
+  const cutAtPoint = (x, rangeIndex) => {
     const bounds = ranges[rangeIndex].range;
     const newRange1 = [bounds[0], x];
     const newRange2 = [x, bounds[1]];
@@ -388,6 +444,7 @@ const DayTimeline = ({
         } else {
           setRanges((prev) => {
             let arr = [...prev];
+            arr.splice(i, 1);
             insertIntoArrayWithSplicingOverlappingItems(arr, val, maxValue);
             return arr;
           });
@@ -471,8 +528,11 @@ const DayTimeline = ({
           <div className="position-relative h-100">
             <RangeLabel
               rangeLabelHeight={rangeLabelHeight}
-              style={timeslotLabelStyle(false)}
               className="d-flex align-items-center justify-content-center"
+              style={{
+                transform: `translateY(${(cellHeight - rangeLabelHeight - 6) / 2}px)`,
+                background: theme.tertiary,
+              }}
             >
               {dayName.substring(0, 3) +
                 " " +
@@ -490,7 +550,10 @@ const DayTimeline = ({
           <div className="position-relative h-100">
             <RangeLabel
               rangeLabelHeight={rangeLabelHeight}
-              style={timeslotLabelStyle(false)}
+              style={{
+                transform: `translateY(${(cellHeight - rangeLabelHeight - 6) / 2}px)`,
+                background: theme.tertiary,
+              }}
               className="d-flex align-items-center justify-content-center"
             >
               {dayName.substring(0, 3) +
@@ -505,6 +568,24 @@ const DayTimeline = ({
         ""
       )}
 
+      {joinAdjacent && !dragging ? (
+        <DayTimelineMerged
+          totalMinutes={totalMinutes}
+          dayName={dayName}
+          rangeLabelHeight={rangeLabelHeight}
+          timeslots={ranges}
+          theme={theme}
+          activeRangeIndex={active}
+          selectedItems={selectedItems}
+          movingRange={movingRange}
+          maxValue={maxValue}
+          rangeStepWidth={rangeStepWidth}
+          day={day}
+          cellHeight={cellHeight}
+        ></DayTimelineMerged>
+      ) : (
+        ""
+      )}
       {ranges.map((x, i) => {
         const isSelected = selectedItems.includes(day + "-" + i);
         return (
@@ -558,7 +639,13 @@ const DayTimeline = ({
               <div className="position-relative h-100">
                 <RangeLabel
                   rangeLabelHeight={rangeLabelHeight}
-                  style={timeslotLabelStyle(isSelected)}
+                  style={{
+                    opacity: !joinAdjacent || dragging ? 1 : 0,
+                    transform: isSelected
+                      ? `translateY(-${rangeLabelHeight / 2 + 2}px)`
+                      : `translateY(${(cellHeight - rangeLabelHeight - 6) / 2}px)`,
+                    background: isSelected ? theme.secondary : theme.tertiary,
+                  }}
                   className="d-flex align-items-center justify-content-center"
                 >
                   {dayName.substring(0, 3) +
@@ -576,14 +663,14 @@ const DayTimeline = ({
       <div
         onMouseDown={(e) => {
           e.stopPropagation();
-          if (activeButton === "unmerge") {
+          if (activeButton === "cut") {
             const { x, rangeIndex } = parseMouseEvent(e);
             if (rangeIndex >= 0) {
-              unmergeAtPoint(x, rangeIndex);
+              cutAtPoint(x, rangeIndex);
             }
           }
         }}
-        style={unmergeLayerStyle}
+        style={cutLayerStyle}
       ></div>
 
       <div

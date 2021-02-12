@@ -3,7 +3,6 @@ import { Drawer, IconButton, Box } from "@material-ui/core";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import { confirmable } from "react-confirm";
 import FormButton from "components/FormButton";
-import OutlinedButton from "components/OutlinedButton";
 import { withStyles } from "@material-ui/core/styles";
 
 const styles = {

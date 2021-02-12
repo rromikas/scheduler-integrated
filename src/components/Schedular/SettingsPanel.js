@@ -54,7 +54,12 @@ const SettingsPanel = ({
     <div style={{ fontWeight: 700 }}>
       <div className="pb-4 mb-4">
         <div className="d-flex align-items-center" style={{ height: 59 }}>
-          <img src={SettingsIcon} className="mr-3 icon-btn" onClick={onClose}></img>
+          <img
+            alt="settings-alt"
+            src={SettingsIcon}
+            className="mr-3 icon-btn"
+            onClick={onClose}
+          ></img>
           <div style={{ fontSize: 30, fontWeight: 500 }} className={classes.title}>
             Settings
           </div>

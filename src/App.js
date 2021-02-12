@@ -15,10 +15,12 @@ function App() {
       }
       e.preventDefault();
     };
-    app.current.addEventListener("touchstart", preventGoBack);
+
+    const appRef = app.current;
+    appRef.addEventListener("touchstart", preventGoBack);
 
     return () => {
-      app.current.removeEventListener("touchstart", preventGoBack);
+      appRef.removeEventListener("touchstart", preventGoBack);
     };
   }, []);
 

@@ -39,7 +39,7 @@ const InfoPanel = ({ classes, currentSchedule, onClose, schedulerHeight, shouldO
     <Box className={classes.root}>
       <div className="mb-4 pb-4">
         <Box display="flex" alignItems="center" style={{ height: 59 }}>
-          <img src={InfoIcon} onClick={onClose} className="mr-3 icon-btn"></img>
+          <img alt="info-alt" src={InfoIcon} onClick={onClose} className="mr-3 icon-btn"></img>
           <Typography className={classes.heading}>Info</Typography>
         </Box>
       </div>

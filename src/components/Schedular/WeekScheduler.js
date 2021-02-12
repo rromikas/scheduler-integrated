@@ -16,11 +16,7 @@ import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import ActionsPanel from "./ActionsPanel";
 import SettingsPanel from "./SettingsPanel";
 import InfoPanel from "./InfoPanel";
-import {
-  isBetween,
-  convertMinsToHrsMins,
-  insertIntoArrayWithSplicingOverlappingItems,
-} from "./scripts/helpers";
+import { isBetween, convertMinsToHrsMins } from "./scripts/helpers";
 import styled, { withTheme } from "styled-components";
 
 const WeekDayCard = styled.div`
@@ -131,12 +127,14 @@ const WeekScheduler = ({
     timesHeight,
     sidePanelWidth,
     rangeLabelHeight,
+    defaultJoinAdjacent,
   } = settings;
 
   const schedulerHeight = timesHeight + tickHeight + 7 * (cellHeight + spaceBetweenTimelines) + 10;
 
   const [activeButton, setActiveButton] = useState(""); //which button is currently active
   const [hourFormat, setHourFormat] = useState(defaultHourFormat);
+  const [joinAdjacent, setJoinAdjacent] = useState(defaultJoinAdjacent);
 
   const scrollableContainer = useRef(null);
   const zoomableContainer = useRef(null);
@@ -186,7 +184,7 @@ const WeekScheduler = ({
     } else {
       didMountRef.current = true;
     }
-  }, [weekStart]);
+  }, [weekStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let interval;
@@ -322,40 +320,40 @@ const WeekScheduler = ({
     }
   };
 
-  const mergeSelectedRanges = () => {
-    let groupedByDayRanges = selectedItems.reduce((a, b) => {
-      let key = b.split("-")[0];
-      if (key in a) {
-        a[key].push(b);
-      } else {
-        a[key] = [b];
-      }
-      return a;
-    }, {});
+  // const mergeSelectedRanges = () => {
+  //   let groupedByDayRanges = selectedItems.reduce((a, b) => {
+  //     let key = b.split("-")[0];
+  //     if (key in a) {
+  //       a[key].push(b);
+  //     } else {
+  //       a[key] = [b];
+  //     }
+  //     return a;
+  //   }, {});
 
-    Object.values(groupedByDayRanges).forEach((r) => {
-      if (r.length >= 2) {
-        let dayIndex = r[0].split("-")[0];
-        let startRangeIndex = r[0].split("-")[1];
-        let endRangeIndex = r[r.length - 1].split("-")[1];
+  //   Object.values(groupedByDayRanges).forEach((r) => {
+  //     if (r.length >= 2) {
+  //       let dayIndex = r[0].split("-")[0];
+  //       let startRangeIndex = r[0].split("-")[1];
+  //       let endRangeIndex = r[r.length - 1].split("-")[1];
 
-        const bounds = [
-          currentSchedule[dayIndex][startRangeIndex].range[0],
-          currentSchedule[dayIndex][endRangeIndex].range[1],
-        ];
+  //       const bounds = [
+  //         currentSchedule[dayIndex][startRangeIndex].range[0],
+  //         currentSchedule[dayIndex][endRangeIndex].range[1],
+  //       ];
 
-        setSelectedItems([]);
+  //       setSelectedItems([]);
 
-        let arr = [...currentSchedule[dayIndex]];
-        insertIntoArrayWithSplicingOverlappingItems(arr, bounds, totalMinutes / step);
-        setCurrentSchedule((prev) => {
-          let nestedArr = [...prev];
-          nestedArr[dayIndex] = arr;
-          return nestedArr;
-        });
-      }
-    });
-  };
+  //       let arr = [...currentSchedule[dayIndex]];
+  //       insertIntoArrayWithSplicingOverlappingItems(arr, bounds, totalMinutes / step);
+  //       setCurrentSchedule((prev) => {
+  //         let nestedArr = [...prev];
+  //         nestedArr[dayIndex] = arr;
+  //         return nestedArr;
+  //       });
+  //     }
+  //   });
+  // };
 
   const onMouseUp = useCallback(() => {
     setDragging(false);
@@ -373,7 +371,7 @@ const WeekScheduler = ({
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("touchstart", preventGoBack);
     };
-  }, [onMouseUp, preventGoBack]);
+  }, [onMouseUp]);
 
   useEffect(() => {
     const keydown = (e) => {
@@ -399,22 +397,25 @@ const WeekScheduler = ({
     const mouseleave = () => {
       pageRef.current.blur();
     };
-    if (pageRef.current) {
-      pageRef.current.addEventListener("mouseenter", mouseenter);
-      pageRef.current.addEventListener("mouseleave", mouseleave);
-      pageRef.current.addEventListener("keydown", keydown);
-      pageRef.current.addEventListener("keyup", keyup);
+
+    const pRef = pageRef.current;
+    if (pRef) {
+      pRef.addEventListener("mouseenter", mouseenter);
+      pRef.addEventListener("mouseleave", mouseleave);
+      pRef.addEventListener("keydown", keydown);
+      pRef.addEventListener("keyup", keyup);
     }
     return () => {
-      pageRef.current.removeEventListener("mouseenter", mouseenter);
-      pageRef.current.removeEventListener("mouseleave", mouseleave);
-      pageRef.current.removeEventListener("keydown", keydown);
-      pageRef.current.removeEventListener("keyup", keyup);
+      pRef.removeEventListener("mouseenter", mouseenter);
+      pRef.removeEventListener("mouseleave", mouseleave);
+      pRef.removeEventListener("keydown", keydown);
+      pRef.removeEventListener("keyup", keyup);
       clearInterval(checkIfDraggingiIntervalRef.current);
     };
-  }, [dragging]);
+  }, [dragging]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    const zContainer = zoomableContainer.current;
     const zoomOnWheel = (e) => {
       let mouseUser = GetMouseUser(e);
       if ((mouseUser === "mouse" && allowZoom) || mouseUser === "trackpad") {
@@ -425,28 +426,29 @@ const WeekScheduler = ({
         }
       }
     };
-    zoomableContainer.current.addEventListener("wheel", zoomOnWheel, {
+    zContainer.addEventListener("wheel", zoomOnWheel, {
       passive: false,
     });
 
     return () => {
-      zoomableContainer.current.removeEventListener("wheel", zoomOnWheel);
+      zContainer.removeEventListener("wheel", zoomOnWheel);
     };
-  }, [allowZoom, size]);
+  }, [allowZoom, size]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    const zContainer = zoomableContainer.current;
     const onTouchEndModified = (e) => {
       onTouchEnd(e, onZoom);
     };
-    zoomableContainer.current.addEventListener("touchstart", onTouchStart);
-    zoomableContainer.current.addEventListener("touchmove", onTouchMove);
-    zoomableContainer.current.addEventListener("touchend", onTouchEndModified);
+    zContainer.addEventListener("touchstart", onTouchStart);
+    zContainer.addEventListener("touchmove", onTouchMove);
+    zContainer.addEventListener("touchend", onTouchEndModified);
     return () => {
-      zoomableContainer.current.removeEventListener("touchstart", onTouchStart);
-      zoomableContainer.current.removeEventListener("touchmove", onTouchMove);
-      zoomableContainer.current.removeEventListener("touchend", onTouchEndModified);
+      zContainer.removeEventListener("touchstart", onTouchStart);
+      zContainer.removeEventListener("touchmove", onTouchMove);
+      zContainer.removeEventListener("touchend", onTouchEndModified);
     };
-  }, [size]); // We need to have real value of size in onZoom method
+  }, [size]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ marginTop: "-8px" }}>
@@ -481,7 +483,8 @@ const WeekScheduler = ({
                 }}
                 handleUnselectAll={() => setSelectedItems([])}
                 handleDelete={onDelete}
-                handleMerge={mergeSelectedRanges}
+                setJoinAdjacent={setJoinAdjacent}
+                joinAdjacent={joinAdjacent}
               ></ActionsPanel>
             </Box>
           </Box>
@@ -627,6 +630,8 @@ const WeekScheduler = ({
                       >
                         {currentSchedule.map((x, i) => (
                           <DayTimeline
+                            joinAdjacent={joinAdjacent}
+                            setJoinAdjacent={setJoinAdjacent}
                             rangeLabelHeight={rangeLabelHeight}
                             setMovingRange={setMovingRange}
                             movingRange={movingRange}

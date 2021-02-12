@@ -3,8 +3,8 @@
   "zoomOnWheel": true,
   "zoomOptions": [
     { "interval": 60, "name": "1h", "cellWidth": 74, "step": 15 },
-    { "interval": 30, "name": "30m", "cellWidth": 76, "step": 15 },
-    { "interval": 15, "name": "15m", "cellWidth": 78, "step": 15 }
+    { "interval": 30, "name": "30m", "cellWidth": 70, "step": 15 },
+    { "interval": 15, "name": "15m", "cellWidth": 66, "step": 15 }
   ],
   "timeGapBetweenZooms": 80,
   "cellHeight": 59,
@@ -15,5 +15,6 @@
   "totalMinutes": 1440,
   "defaultHourFormat": 24,
   "defaultZoomOption": 0,
-  "spaceBetweenTimelines": 20
+  "spaceBetweenTimelines": 20,
+  "defaultJoinAdjacent": false
 }

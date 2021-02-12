@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { compose, withProps, defaultProps } from "recompose";
@@ -71,7 +71,7 @@ const TimezoneMapGL = (props) => {
         viewport: newViewport,
       })
     );
-  }, [defaultViewport]);
+  }, [defaultViewport]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateViewport = (viewport) => {
     setState((prev) => Object.assign({}, prev, { viewport }));
@@ -183,7 +183,7 @@ const TimezoneMapGL = (props) => {
 
   const renderSelectOrHoveredTimezone = () => {
     const { source, timezone } = props;
-    const { viewport, hoveredFeature, lngLat, neTimeZoneFeature } = state;
+    const { viewport, hoveredFeature, lngLat } = state;
 
     const layers = [];
     if (timezone && Info.isValidIANAZone(timezone)) {
