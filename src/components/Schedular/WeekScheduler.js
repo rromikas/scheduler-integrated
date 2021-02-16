@@ -4,7 +4,6 @@ import "bootstrap/dist/css/bootstrap.css";
 import "./styles/style.css";
 import moment from "moment";
 import settings from "./config";
-import GetMouseUser from "./scripts/getMouseUserOnWheel";
 import {
   onTouchStart,
   onTouchEnd,
@@ -417,8 +416,7 @@ const WeekScheduler = ({
   useEffect(() => {
     const zContainer = zoomableContainer.current;
     const zoomOnWheel = (e) => {
-      let mouseUser = GetMouseUser(e);
-      if ((mouseUser === "mouse" && allowZoom) || mouseUser === "trackpad") {
+      if (allowZoom) {
         if (e.deltaY !== 0) {
           e.preventDefault();
           let direction = e.deltaY < 0 ? "in" : "out";

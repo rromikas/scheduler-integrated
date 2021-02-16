@@ -3,7 +3,6 @@ let initialDistance;
 let center;
 
 export const preventGoBack = (e) => {
-  // alert(e.pageX);
   if (e.pageX > 10 && e.pageX < window.innerWidth - 10) {
     return;
   } else {

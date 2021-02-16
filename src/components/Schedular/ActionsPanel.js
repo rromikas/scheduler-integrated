@@ -62,12 +62,12 @@ const ActionsPanel = ({
           ></img>
         </div>
       </div>
-      {joinAdjacent ? (
+      {!joinAdjacent ? (
         <div className="mr-3">
           <img
             alt="merge"
             onClick={() => {
-              setJoinAdjacent(false);
+              setJoinAdjacent(true);
               handleUnselectAll();
             }}
             className={`icon-btn`}
@@ -79,7 +79,7 @@ const ActionsPanel = ({
           <img
             alt="unmerge"
             onClick={() => {
-              setJoinAdjacent(true);
+              setJoinAdjacent(false);
               handleUnselectAll();
             }}
             className={`icon-btn`}
